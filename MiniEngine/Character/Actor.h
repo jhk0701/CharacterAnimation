@@ -13,13 +13,18 @@ public:
 	virtual ~Actor();
 
 private:
+	bool bIsStatic{ false };
 	std::vector<std::shared_ptr<Component>> m_vecComp;
 
 public:
 	virtual void Update(float delta) override;
+	virtual void Render() override;
 	
 	template<typename T>
 	std::weak_ptr<T> AddComponent();
+
+	void SetIsStatic(bool bIsOn) { bIsStatic = bIsOn; }
+	bool IsStatic() const { return bIsStatic; }
 };
 
 template<typename T>

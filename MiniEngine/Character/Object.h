@@ -17,7 +17,7 @@ private:
 
 public:
 	virtual void Update(float delta) = 0;
-	virtual void Render();
+	virtual void Render() = 0;
 
 	void SetEnable(bool bIsOn) { m_bIsEnable = bIsOn; }
 	bool IsEnable() const { return m_bIsEnable; }

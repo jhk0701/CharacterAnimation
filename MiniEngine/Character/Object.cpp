@@ -8,9 +8,3 @@ Object::Object() :
 Object::~Object()
 {
 }
-
-void Object::Render()
-{
-	if (!IsEnable())
-		return;
-}
