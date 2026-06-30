@@ -9,6 +9,8 @@
 #include "PipelineState.h"
 #include "BufferManager.h"
 
+#include "EngineCore.h"
+
 using namespace GameCore;
 using namespace Graphics;
 
@@ -34,18 +36,21 @@ CREATE_APPLICATION( Character )
 void Character::Startup( void )
 {
     // Setup your data
+    EngineCore::GetInstance()->Init();
 }
 
 void Character::Cleanup( void )
 {
     // Free up resources in an orderly fashion
+    EngineCore::GetInstance()->Clear();
 }
 
-void Character::Update( float /*deltaT*/ )
+void Character::Update( float deltaT )
 {
     ScopedTimer _prof(L"Update State");
 
     // Update something
+    EngineCore::GetInstance()->Update(deltaT);
 }
 
 void Character::RenderScene( void )
@@ -58,6 +63,7 @@ void Character::RenderScene( void )
     gfxContext.SetViewportAndScissor(0, 0, g_SceneColorBuffer.GetWidth(), g_SceneColorBuffer.GetHeight());
 
     // Rendering something
+    // 렌더링 관련 절차 확인 필요
 
     gfxContext.Finish();
 }

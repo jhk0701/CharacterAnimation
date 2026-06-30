@@ -57,3 +57,6 @@
 #include "VectorMath.h"
 #include "EngineTuning.h"
 #include "EngineProfiling.h"
+
+// 커스텀 파트
+#include "define.h"
