@@ -99,7 +99,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Build\$(Configuration)\$(Platform)\Output\Core;$(SolutionDir)..\Build\$(Configuration)\$(Platform)\Output\Model;..\..\Packages\directxmesh_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\directxtex_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Build\$(Platform)\$(Configuration)\Output\Core;..\Build\$(Platform)\$(Configuration)\Output\Model;..\..\Packages\directxmesh_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\directxtex_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
