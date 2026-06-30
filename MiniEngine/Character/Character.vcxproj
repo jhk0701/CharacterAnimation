@@ -54,6 +54,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="constVar.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="EngineCore.h" />
@@ -63,6 +65,8 @@
     <ClInclude Include="SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="Component.cpp" />
     <ClCompile Include="constVar.cpp" />
     <ClCompile Include="define.cpp" />
     <ClCompile Include="EngineCore.cpp" />

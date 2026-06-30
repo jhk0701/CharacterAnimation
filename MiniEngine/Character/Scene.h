@@ -36,5 +36,5 @@ inline std::weak_ptr<T> Scene::Instantiate()
 	pObj->SetEnable(true);
 	AddObject(pObj);
 
-	return pObj;
+	return pInstance;
 }

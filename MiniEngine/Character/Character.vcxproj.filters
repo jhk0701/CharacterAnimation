@@ -12,23 +12,29 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{06dcf987-d5c3-489b-aa0a-88d547a323d5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Header">
-      <UniqueIdentifier>{e9696d36-7191-4c77-81c8-58535cc5a497}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Engine">
       <UniqueIdentifier>{61370c8e-b3d0-4605-a0f5-c798cc9c0cb0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Content">
       <UniqueIdentifier>{ef0a23ef-9546-4755-87c3-2d29115ef49f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Scene">
-      <UniqueIdentifier>{b33d2264-24e3-4cc5-b73b-aa2d6e0085a9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Manager">
+    <Filter Include="Source Files\Engine\Manager">
       <UniqueIdentifier>{a22da13f-634d-4dd7-8d11-4a4076be1902}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Object">
+    <Filter Include="Source Files\Engine\Header">
+      <UniqueIdentifier>{e9696d36-7191-4c77-81c8-58535cc5a497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Object">
       <UniqueIdentifier>{6d9bbe7c-bce8-4d04-9039-36a0e54fb883}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Object\Actor">
+      <UniqueIdentifier>{702e50a6-c081-4422-be37-543896470280}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Object\Component">
+      <UniqueIdentifier>{62745315-092c-4317-9417-9acc7111e54e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Scene">
+      <UniqueIdentifier>{b33d2264-24e3-4cc5-b73b-aa2d6e0085a9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,19 +46,25 @@
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
     <ClCompile Include="define.cpp">
-      <Filter>Source Files\Header</Filter>
+      <Filter>Source Files\Engine\Header</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
-      <Filter>Source Files\Scene</Filter>
+      <Filter>Source Files\Engine\Scene</Filter>
     </ClCompile>
     <ClCompile Include="constVar.cpp">
-      <Filter>Source Files\Header</Filter>
+      <Filter>Source Files\Engine\Header</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
-      <Filter>Source Files\Object</Filter>
+      <Filter>Source Files\Engine\Object</Filter>
     </ClCompile>
     <ClCompile Include="SceneManager.cpp">
-      <Filter>Source Files\Manager</Filter>
+      <Filter>Source Files\Engine\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Source Files\Engine\Object\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Component.cpp">
+      <Filter>Source Files\Engine\Object\Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -61,19 +73,25 @@
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="define.h">
-      <Filter>Source Files\Header</Filter>
+      <Filter>Source Files\Engine\Header</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
-      <Filter>Source Files\Scene</Filter>
+      <Filter>Source Files\Engine\Scene</Filter>
     </ClInclude>
     <ClInclude Include="constVar.h">
-      <Filter>Source Files\Header</Filter>
+      <Filter>Source Files\Engine\Header</Filter>
     </ClInclude>
     <ClInclude Include="Object.h">
-      <Filter>Source Files\Object</Filter>
+      <Filter>Source Files\Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="SceneManager.h">
-      <Filter>Source Files\Manager</Filter>
+      <Filter>Source Files\Engine\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Source Files\Engine\Object\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>Source Files\Engine\Object\Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
