@@ -2,8 +2,8 @@
 
 #include <memory>
 
-// #include "Math/Transform.h"
-// using namespace Math;
+#include "Math/Transform.h"
+using namespace Math;
 
 class Object : public std::enable_shared_from_this<Object>
 {
@@ -12,7 +12,7 @@ public:
 	virtual ~Object();
 
 private:
-	// AffineTransform m_Transform;
+	AffineTransform m_Transform;
 	bool m_bIsEnable;
 
 public:
@@ -22,6 +22,6 @@ public:
 	void SetEnable(bool bIsOn) { m_bIsEnable = bIsOn; }
 	bool IsEnable() const { return m_bIsEnable; }
 
-	/*inline Vector3 GetTranslation() const { return m_Transform.GetTranslation(); }
-	inline void SetTranslation(const Vector3& _w) { m_Transform.SetTranslation(_w); }*/
+	inline Vector3 GetTranslation() const { return m_Transform.GetTranslation(); }
+	inline void SetTranslation(const Vector3& _w) { m_Transform.SetTranslation(_w); }
 };

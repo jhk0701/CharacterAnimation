@@ -24,4 +24,7 @@ void Actor::Render()
 {
 	if (!IsEnable())
 		return;
+
+	for (std::shared_ptr<Component>& pComp : m_vecComp)
+		pComp->Render();
 }

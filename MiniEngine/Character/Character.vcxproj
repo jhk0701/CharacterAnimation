@@ -105,6 +105,8 @@
   </ItemDefinitionGroup>
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets" Condition="Exists('..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets')" />
+    <Import Project="..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets" Condition="Exists('..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" />
+    <Import Project="..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets" Condition="Exists('..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -112,5 +114,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets'))" />
     <Error Condition="!Exists('..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets'))" />
+    <Error Condition="!Exists('..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets'))" />
+    <Error Condition="!Exists('..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets'))" />
   </Target>
 </Project>
