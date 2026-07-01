@@ -73,6 +73,8 @@ void Character::Startup( void )
     EngineCore::GetInstance()->Init();
     
     TempStartUp(); // Å×½ºÆ®
+
+    
 }
 
 void Character::Cleanup( void )
