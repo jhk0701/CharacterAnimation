@@ -50,6 +50,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup>
     <LibraryPath>$(FbxLibDir);$(LibraryPath)</LibraryPath>
     <IncludePath>$(FbxIncludeDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -116,7 +120,8 @@
       <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;libfbxsdk.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(FbxDllPath)" "$(OutDir)"</Command>
+      <Command>xcopy /y /d "$(FbxDllPath)" "$(OutDir)"
+xcopy /y /d /e /i "$(ProjectDir)..\..\Assets" "$(OutDir)Assets\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>

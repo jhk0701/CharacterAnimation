@@ -139,7 +139,8 @@ void SIMDMemFill( void* __restrict _Dest, __m128 FillVector, size_t NumQuadwords
 std::wstring Utility::UTF8ToWideString( const std::string& str )
 {
     wchar_t wstr[MAX_PATH];
-    if ( !MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), -1, wstr, MAX_PATH) )
+    // UTF-8 -> UTF-16. CP_UTF8은 dwFlags로 0 또는 MB_ERR_INVALID_CHARS만 허용한다.
+    if ( !MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, wstr, MAX_PATH) )
         wstr[0] = L'\0';
     return wstr;
 }
@@ -147,8 +148,11 @@ std::wstring Utility::UTF8ToWideString( const std::string& str )
 std::string Utility::WideStringToUTF8( const std::wstring& wstr )
 {
     char str[MAX_PATH];
-    if ( !WideCharToMultiByte(CP_ACP, MB_PRECOMPOSED, wstr.c_str(), -1, str, MAX_PATH, nullptr, nullptr) )
-        str[0] = L'\0';
+    // UTF-16 -> UTF-8. WideCharToMultiByte는 MB_PRECOMPOSED를 지원하지 않는다.
+    // (MB_PRECOMPOSED는 MultiByteToWideChar 전용 플래그이며, 여기에 넘기면
+    //  ERROR_INVALID_FLAGS로 실패해 빈 문자열이 반환된다 → FBX 경로가 비어 로드 실패.)
+    if ( !WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, str, MAX_PATH, nullptr, nullptr) )
+        str[0] = '\0';
     return str;
 }
 

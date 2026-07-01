@@ -71,6 +71,7 @@ namespace FBX
     struct Skin
     {
         std::vector<int> jointNodeIndices;
+        std::vector<std::string> jointNames;   // 클러스터가 연결된 본 노드 이름(노드 인덱스 해석용)
         std::vector<XMFLOAT4X4> inverseBindMatrices;
     };
 

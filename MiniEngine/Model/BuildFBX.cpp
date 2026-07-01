@@ -479,21 +479,31 @@ static void BuildFbxSkins(ModelData& model, const FBX::Asset& asset)
     std::vector<std::pair<uint16_t, uint16_t>> skinMap; // offset, count
     skinMap.reserve(asset.m_skins.size());
 
+    // 본 노드 이름 -> 씬 그래프 선형 인덱스(matrixIdx) 맵.
+    // linearIdx는 WalkFbxGraph에서 이미 할당되었다.
+    std::map<std::string, uint16_t> nameToLinear;
+    for (const FBX::Node& n : asset.m_nodes)
+        if (n.linearIdx >= 0)
+            nameToLinear.emplace(n.name, (uint16_t)n.linearIdx);
+
     for (const FBX::Skin& skin : asset.m_skins)
     {
         uint16_t numJoints = (uint16_t)skin.jointNodeIndices.size();
         uint16_t curOffset = (uint16_t)model.m_JointIndices.size();
         skinMap.push_back({ curOffset, numJoints });
 
-        for (int jointIdx : skin.jointNodeIndices)
+        // 정점 BLENDINDICES는 클러스터 순번(ci)을 저장하므로, m_JointIndices[ci]에는
+        // 그 클러스터가 연결된 본 노드의 씬 그래프 인덱스가 들어가야 한다.
+        // 클러스터 순번을 노드 인덱스로 직접 쓰면 안 되고, 본 이름으로 해석한다.
+        for (size_t ci = 0; ci < skin.jointNodeIndices.size(); ++ci)
         {
-            // jointIdx here is the cluster index; we need the linearIdx of the joint node.
-            // During WalkFbxGraph, linearIdx was assigned. Look up the FBX::Node whose
-            // name matches, then use its linearIdx.
-            // As a fallback (if skin joint indices weren't resolved), use 0.
             uint16_t linearIdx = 0;
-            if (jointIdx >= 0 && jointIdx < (int)asset.m_nodes.size())
-                linearIdx = (uint16_t)std::max(0, asset.m_nodes[jointIdx].linearIdx);
+            if (ci < skin.jointNames.size())
+            {
+                auto it = nameToLinear.find(skin.jointNames[ci]);
+                if (it != nameToLinear.end())
+                    linearIdx = it->second;
+            }
             model.m_JointIndices.push_back(linearIdx);
         }
 
@@ -577,6 +587,9 @@ static void BuildFbxAnimations(ModelData& model, const FBX::Asset& asset)
 
 bool Renderer::BuildModel(ModelData& model, const FBX::Asset& asset)
 {
+    if (asset.m_nodes.empty())
+        return false;
+
     BuildFbxMaterials(model, asset);
 
     model.m_SceneGraph.resize(asset.m_nodes.size());

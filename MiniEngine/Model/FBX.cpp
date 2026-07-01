@@ -225,10 +225,12 @@ namespace FBXManager
             {
                 FbxCluster* cluster = fbxSkin->GetCluster(ci);
                 FbxNode* linkNode = cluster->GetLink();
-                // linearIdx assigned later; store pointer as placeholder index
-                skin.jointNodeIndices[ci] = -1; // resolved in BuildFBX.cpp
 
-                skin.jointNodeIndices[ci] = ci; // will be remapped in BuildFBX.cpp
+                // 정점의 BLENDINDICES는 클러스터 순번(ci)을 저장한다.
+                // 스킨 행렬을 만들려면 각 클러스터가 연결된 본 노드의 씬 그래프
+                // 인덱스가 필요하므로, 본 노드 이름을 남겨 BuildFBX.cpp에서 해석한다.
+                skin.jointNodeIndices[ci] = ci;
+                skin.jointNames.push_back(linkNode ? linkNode->GetName() : std::string());
 
                 // IBM: the bind-pose world matrix of the joint
                 FbxAMatrix transformLink;
@@ -451,10 +453,19 @@ namespace FBXManager
         asset.m_nodes[idx].scale        = XMFLOAT3((float)s[0], (float)s[1], (float)s[2]);
         asset.m_nodes[idx].rotation     = XMFLOAT4((float)q[0], (float)q[1], (float)q[2], (float)q[3]);
         
-        // 스켈레톤 노드 확인
+        // 스켈레톤 루트 노드 확인
+        // skeletonRoot는 "스켈레톤의 최상위 본"에만 표시해야 한다. 런타임(Model.cpp)은
+        // 이 플래그가 켜진 노드에서 부모(로케이터) 행렬 누적을 끊고 로컬 변환만 사용하므로,
+        // 모든 본에 켜면 FK 계층 누적이 깨진다. 부모가 스켈레톤이 아닌 본만 루트로 표시한다.
         FbxNodeAttribute* attr = fbxNode->GetNodeAttribute();
-        if (attr && attr->GetAttributeType() == FbxNodeAttribute::eSkeleton)
-            asset.m_nodes[idx].skeletonRoot = true;
+        bool isSkeleton = attr && attr->GetAttributeType() == FbxNodeAttribute::eSkeleton;
+        bool parentIsSkeleton = false;
+        if (FbxNode* parent = fbxNode->GetParent())
+        {
+            FbxNodeAttribute* pAttr = parent->GetNodeAttribute();
+            parentIsSkeleton = pAttr && pAttr->GetAttributeType() == FbxNodeAttribute::eSkeleton;
+        }
+        asset.m_nodes[idx].skeletonRoot = isSkeleton && !parentIsSkeleton;
 
         // 메시 추가 : 스킨이라면 스킨에 추가
         FbxMesh* fbxMesh = fbxNode->GetMesh();
@@ -589,6 +600,7 @@ namespace FBXManager
                     rChan.keys.push_back(rKey);
 
                     FBX::AnimKey sKey;
+                    sKey.time = t;
                     sKey.v[0] = (float)scale[0];
                     sKey.v[1] = (float)scale[1];
                     sKey.v[2] = (float)scale[2];
