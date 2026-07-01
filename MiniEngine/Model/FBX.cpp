@@ -442,7 +442,7 @@ namespace FBXManager
         asset.m_nodes[idx].skeletonRoot = false;
 
         // 0번 프레임에서 트랜스폼 정보 로드
-        FbxAMatrix localXform = fbxNode->EvaluateLocalTransform(fbxsdk::FbxTime(0));
+        FbxAMatrix localXform = fbxNode->EvaluateLocalTransform(FbxTime(0));
         FbxVector4 t = localXform.GetT();
         FbxVector4 s = localXform.GetS();
         FbxQuaternion q = localXform.GetQ();
@@ -515,9 +515,9 @@ namespace FBXManager
             FbxAnimStack* stack = scene->GetSrcObject<FbxAnimStack>(si);
             scene->SetCurrentAnimationStack(stack);
 
-            fbxsdk::FbxTimeSpan span = stack->GetLocalTimeSpan();
-            fbxsdk::FbxTime startTime = span.GetStart();
-            fbxsdk::FbxTime endTime = span.GetStop();
+            FbxTimeSpan span = stack->GetLocalTimeSpan();
+            FbxTime startTime = span.GetStart();
+            FbxTime endTime = span.GetStop();
 
             double durationSec = (endTime - startTime).GetSecondDouble();
 
@@ -537,7 +537,7 @@ namespace FBXManager
                 int nodeIdx = pair.second;
 
                 bool hasAnim = false;
-                fbxsdk::FbxAnimLayer* layer = stack->GetMember<fbxsdk::FbxAnimLayer>(0);
+                FbxAnimLayer* layer = stack->GetMember<FbxAnimLayer>(0);
                 if (layer)
                 {
                     hasAnim = fbxNode->LclTranslation.GetCurve(layer) != nullptr
@@ -564,7 +564,7 @@ namespace FBXManager
                 for (int fi = 0; fi < frameCnt; ++fi)
                 {
                     float t = (float)fi / kFPS;
-                    fbxsdk::FbxTime fbxTime;
+                    FbxTime fbxTime;
                     fbxTime.SetSecondDouble((double)startTime.GetSecondDouble() + t);
 
                     FbxAMatrix localXform = evaluator->GetNodeLocalTransform(fbxNode, fbxTime);
