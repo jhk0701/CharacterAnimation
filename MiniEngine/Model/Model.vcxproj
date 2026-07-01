@@ -57,10 +57,15 @@
     <Manifest>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
+    <ClCompile>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">K_PLUGIN;K_FBXSDK;K_NODLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="ConstantBuffers.h" />
+    <ClInclude Include="FBX.h" />
     <ClInclude Include="glTF.h" />
     <ClInclude Include="IndexOptimizePostTransform.h" />
     <ClInclude Include="json.hpp" />
@@ -76,7 +81,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="BuildFBX.cpp" />
     <ClCompile Include="BuildH3D.cpp" />
+    <ClCompile Include="FBX.cpp" />
     <ClCompile Include="glTF.cpp" />
     <ClCompile Include="IndexOptimizePostTransform.cpp" />
     <ClCompile Include="LightManager.cpp" />

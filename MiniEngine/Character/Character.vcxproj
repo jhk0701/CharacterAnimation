@@ -68,7 +68,6 @@
     <ClInclude Include="constVar.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="EngineCore.h" />
-    <ClInclude Include="FBX.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene.h" />
@@ -80,7 +79,6 @@
     <ClCompile Include="constVar.cpp" />
     <ClCompile Include="define.cpp" />
     <ClCompile Include="EngineCore.cpp" />
-    <ClCompile Include="FBX.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="pch.cpp">
@@ -110,14 +108,17 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalLibraryDirectories>..\..\Packages\FBX-SDK.2020.3.9\lib\x64\$(Configuration);..\Build\$(Platform)\$(Configuration)\Output\Core;..\Build\$(Platform)\$(Configuration)\Output\Model;..\..\Packages\directxmesh_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\directxtex_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;libfbxsdk.lib;libxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Build\$(Platform)\$(Configuration)\Output\Core;..\Build\$(Platform)\$(Configuration)\Output\Model;..\..\Packages\directxmesh_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\directxtex_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <ClCompile>
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ImportGroup Label="ExtensionTargets">

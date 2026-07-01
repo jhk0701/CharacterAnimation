@@ -23,6 +23,7 @@
 #include <vector>
 
 namespace glTF { class Asset; struct Mesh; }
+namespace FBX { class Asset; }
 
 #define CURRENT_MINI_FILE_VERSION 13
 
@@ -98,6 +99,7 @@ namespace Renderer
     );
 
     bool BuildModel( ModelData& model, const glTF::Asset& asset, int sceneIdx = -1 );
+    bool BuildModel(ModelData& model, const FBX::Asset& asset);
     bool SaveModel( const std::wstring& filePath, const ModelData& model );
     
     std::shared_ptr<Model> LoadModel( const std::wstring& filePath, bool forceRebuild = false );

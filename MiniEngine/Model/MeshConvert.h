@@ -26,8 +26,8 @@ namespace Renderer
 
     struct Primitive
     {
-        BoundingSphere m_BoundsLS;  // local space bounds
-        BoundingSphere m_BoundsOS;  // object space bounds
+        Math::BoundingSphere m_BoundsLS;  // local space bounds
+        Math::BoundingSphere m_BoundsOS;  // object space bounds
         AxisAlignedBox m_BBoxLS;       // local space AABB
         AxisAlignedBox m_BBoxOS;       // object space AABB
         Utility::ByteArray VB;

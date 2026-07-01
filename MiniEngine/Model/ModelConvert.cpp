@@ -17,6 +17,7 @@
 #include "ModelLoader.h"
 #include "Renderer.h"
 #include "glTF.h"
+#include "FBX.h"
 #include "TextureConvert.h"
 #include "MeshConvert.h"
 #include "TextureManager.h"

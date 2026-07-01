@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include <DirectXMath.h>
 
 using namespace DirectX;
@@ -33,7 +36,7 @@ namespace FBX
         std::vector<XMFLOAT3> normals;
         std::vector<XMFLOAT4> tangents;
         std::vector<XMFLOAT2> uv0;
-        std::vector<XMUINT4>  jointIndices;
+        std::vector<XMFLOAT4>  jointIndices; // XMUINT4->XMFLOAT4
         std::vector<XMFLOAT4> jointWeights;
         uint32_t vertexCount;
         int materialIdx;

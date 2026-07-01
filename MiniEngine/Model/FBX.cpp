@@ -1,10 +1,10 @@
-#include "pch.h"
 #include "FBX.h"
-#include "Utility.h"
+#include "../Core/Utility.h"
 
 #include <fbxsdk.h>
 
 using namespace DirectX;
+using namespace std;
 
 namespace 
 {
@@ -357,7 +357,7 @@ namespace
                 // Skin weights (from control point)
                 if (skinCount > 0)
                 {
-                    XMUINT4 joints = { 0, 0, 0, 0 };
+                    XMFLOAT4 joints = { 0, 0, 0, 0 }; // XMUINT4
                     XMFLOAT4 weights = { 0, 0, 0, 0 };
 
                     auto& infl = cpInfluences[cpIdx];
@@ -648,19 +648,19 @@ namespace FBX
         m_basePath = Utility::GetBasePath(filePath);
 
         // FBX 좌표계 -> direct X 좌표계 변환
-        // FbxAxisSystem::DirectX.ConvertScene(scene);
+        FbxAxisSystem::DirectX.ConvertScene(scene);
 
-        //// 미터(m) 단위로 변환
-        // FbxSystemUnit::m.ConvertScene(scene);
+        // 미터(m) 단위로 변환
+        FbxSystemUnit::m.ConvertScene(scene);
 
         //// 전체 메시 삼각화 
-        //FbxGeometryConverter geomConv(manager);
-        //geomConv.Triangulate(scene, true);
+        FbxGeometryConverter geomConv(manager);
+        geomConv.Triangulate(scene, true);
 
         //// 씬 순서에 따라 재질 추출
-        //int matCnt = scene->GetMaterialCount();
-        //for (int i = 0; i < matCnt; ++i)
-        //    ExtractMaterial(*this, scene->GetMaterial(i));
+        int matCnt = scene->GetMaterialCount();
+        for (int i = 0; i < matCnt; ++i)
+            ExtractMaterial(*this, scene->GetMaterial(i));
 
         // 노드 계층 탐색
         FbxNode* root = scene->GetRootNode();
