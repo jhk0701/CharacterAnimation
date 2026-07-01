@@ -6,7 +6,7 @@
 using namespace DirectX;
 using namespace std;
 
-namespace 
+namespace FBXManager
 {
 	static FbxManager* s_FbxManager = nullptr;
 
@@ -93,6 +93,8 @@ namespace
 			if (abs && abs[0] != '\0')
 				return std::string(abs);
 		}
+
+        return {};
 	}
 
 	// 재질 추출
@@ -614,7 +616,7 @@ namespace FBX
 {
 	bool Asset::Parse(const std::wstring& filePath) 
 	{
-        FbxManager* manager = GetFbxManager();
+        FbxManager* manager = FBXManager::GetFbxManager();
 
         FbxImporter* importer = FbxImporter::Create(manager, "");
         std::string pathUtf8 = Utility::WideStringToUTF8(filePath);
@@ -660,7 +662,7 @@ namespace FBX
         //// 씬 순서에 따라 재질 추출
         int matCnt = scene->GetMaterialCount();
         for (int i = 0; i < matCnt; ++i)
-            ExtractMaterial(*this, scene->GetMaterial(i));
+            FBXManager::ExtractMaterial(*this, scene->GetMaterial(i));
 
         // 노드 계층 탐색
         FbxNode* root = scene->GetRootNode();
@@ -670,17 +672,17 @@ namespace FBX
         {
             for (int ci = 0; ci < root->GetChildCount(); ++ci)
             {
-                int idx = AddNode(*this, root->GetChild(ci), nodeMap);
+                int idx = FBXManager::AddNode(*this, root->GetChild(ci), nodeMap);
                 m_rootNodes.push_back(idx);
             }
         }
 
-        RemapMaterialIndices(*this, scene);
+        FBXManager::RemapMaterialIndices(*this, scene);
 
         for (auto& skin : m_skins)
             (void)skin;
 
-        SampleAnimations(*this, scene, nodeMap);
+        FBXManager::SampleAnimations(*this, scene, nodeMap);
         scene->Destroy();
 
 		return true;
@@ -688,10 +690,10 @@ namespace FBX
 
 	void Shutdown()
 	{
-        if (s_FbxManager)
+        if (FBXManager::s_FbxManager)
         {
-            s_FbxManager->Destroy();
-            s_FbxManager = nullptr;
+            FBXManager::s_FbxManager->Destroy();
+            FBXManager::s_FbxManager = nullptr;
         }
 	}
 }
