@@ -8,7 +8,7 @@ namespace FBX
 {
 	struct Image 
 	{
-		std::wstring path;
+		std::string path;
 	};
 
 	struct Material
@@ -52,7 +52,7 @@ namespace FBX
     // FBX SDK 로드 호환용 Node
     struct Node
     {
-        std::wstring name;
+        std::string name;
         int meshIdx;
         int skinIdx;
         std::vector<int> children;
@@ -61,7 +61,7 @@ namespace FBX
 
         XMFLOAT3 scale;
         XMFLOAT3 translation;
-        XMFLOAT3 rotation; // 쿼터니언 회전값
+        XMFLOAT4 rotation; // 쿼터니언 회전값
     };
 
     // 스키닝 데이터
@@ -90,8 +90,14 @@ namespace FBX
 
     struct AnimStack
     {
-        std::wstring name;
+        std::string name;
         float duration;
+
+        // 채널 구성
+        // 0 : translation
+        // 1 : rotation
+        // 2 : scale
+        std::vector<AnimChannel> channels;
     };
 
 #pragma endregion
