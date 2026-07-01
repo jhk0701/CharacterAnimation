@@ -61,8 +61,8 @@ void Character::Startup( void )
 
     m_FbxRenderer.Initialize();
 
-    if (!m_FbxModel.Load(L"Assets/X Bot.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/X Bot.fbx\n");
+    if (!m_FbxModel.Load(L"Assets/Capoeira.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/Capoeira.fbx\n");
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(
@@ -83,6 +83,8 @@ void Character::Update( float deltaT )
     ScopedTimer _prof(L"Update State");
 
     EngineCore::GetInstance()->Update(deltaT);
+
+    m_FbxModel.Update(deltaT);   // 애니메이션 진행 + CPU 스키닝
 
     m_CameraController->Update(deltaT);
 

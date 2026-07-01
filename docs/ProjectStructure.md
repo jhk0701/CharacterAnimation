@@ -642,35 +642,51 @@ CREATE_APPLICATION(MyApp)
 
 `MiniEngine/Character/`는 Model 프로젝트의 로딩/렌더 파이프라인(`Renderer::LoadModel`,
 `ModelData`, `.mini` 캐시, `MeshSorter`)을 사용하지 않고, **FBX SDK로 직접 파싱한 뒤 Core의
-그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/X Bot.fbx`
-스켈레탈 메시를 **바인드 포즈 + 흰색 diffuse**로 렌더까지 구현. 스킨/애니메이션은 다음 단계.)
+그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/Capoeira.fbx`
+스켈레탈 메시를 로드해 **CPU 스키닝으로 스켈레톤 애니메이션을 재생**. 흰색 diffuse.)
+
+### 애니메이션 / CPU 스키닝
+
+- `Capoeira.fbx`(Mixamo "with skin")는 메시+스켈레톤+스킨+애니메이션을 모두 포함해 단일 파일로 로드.
+- `FbxModel::Load`: 스킨 클러스터에서 본/가중치/바인드행렬 추출. **본에 애니메이션 커브가 연결된
+  스택**을 선택(빈 `Take 001` 스택 회피, 실제 `mixamo.com` 사용). FbxScene을 보관해 런타임에
+  `node->EvaluateGlobalTransform(t)`로 본 글로벌을 평가.
+- **곱 순서 모호성 회피**: 검증된 `TransformPoint`(v*M 행벡터) 중첩으로 컨트롤포인트별 **본-로컬
+  바인드 위치/노멀**(`cp·M·L^-1`)을 로드 시 미리 계산. 런타임 `FbxModel::Update`는
+  `Σ w·TransformPoint(G_b(t), localPos)`(LBS)만 수행 후 Z 반전.
+- `FbxRenderer::Render`: 매 프레임 `GraphicsContext::SetDynamicVB`로 스킨드 정점 업로드 +
+  `DrawInstanced`(비인덱스). 정점 포맷(pos+normal)/셰이더/RootSignature는 정적 렌더와 동일.
+- `Main.cpp::Update`가 `m_FbxModel.Update(deltaT)`로 애니메이션을 진행(구간 루프).
 
 ### 구성 파일
 
 | 파일 | 역할 |
 |------|------|
-| `FbxModel.{h,cpp}` | FBX SDK 파싱 → position+normal 전개 + 순차 인덱스 → `ByteAddressBuffer` VB/IB 업로드, 바운딩 스피어 계산 |
-| `FbxRenderer.{h,cpp}` | `RootSignature`(b0 CBV) + `GraphicsPSO` 생성, `Render()`에서 상수 세팅 후 `DrawIndexed` |
+| `FbxModel.{h,cpp}` | FBX SDK 파싱 → 스킨/스켈레톤/애니 추출, 본-로컬 바인드 미리 계산. `Update(dt)`로 매 프레임 CPU LBS 스키닝(pimpl, 씬 보관) |
+| `FbxRenderer.{h,cpp}` | `RootSignature`(b0 CBV) + `GraphicsPSO` 생성, `Render()`에서 상수 세팅 후 `SetDynamicVB` + `DrawInstanced` |
 | `Shaders/SimpleVS.hlsl`, `SimplePS.hlsl` | 최소 정점/픽셀 셰이더(ViewProj 변환 + N·L 조명). FxCompile로 `CompiledShaders/*.h` 자동 생성 |
-| `Main.cpp` | `IGameApp` 구현. `FbxModel`/`FbxRenderer`로 큐브 로드·렌더, 회색 배경 |
+| `Main.cpp` | `IGameApp` 구현. `FbxModel`/`FbxRenderer`로 로드·애니 업데이트·렌더, 회색 배경 |
 
 ### 렌더 흐름
 
 ```
 Character::Startup()
   ├─ FbxRenderer::Initialize()   ← RootSignature + PSO 생성
-  ├─ FbxModel::Load("Assets/X Bot.fbx")
+  ├─ FbxModel::Load("Assets/Capoeira.fbx")
   │    FbxImporter → Import → SystemUnit::m(단위만) / Triangulate
-  │    → 노드 월드 변환 베이크 + Z 반전(RH Y-up→LH Y-up) → 정점/인덱스 → ByteAddressBuffer VB/IB
-  │    (스킨 메시라도 바인드 포즈 지오메트리는 스키닝 없이 그대로 렌더됨)
+  │    → 스킨 클러스터에서 본/가중치/바인드행렬 추출, 애니 커브 있는 스택 선택
+  │    → 컨트롤포인트별 본-로컬 바인드 위치/노멀 미리 계산(씬 보관)
   └─ OrbitCamera 타깃 = 모델 바운딩 스피어
+
+Character::Update(dt)
+  └─ FbxModel::Update(dt)   ← 시간 진행(루프) + CPU LBS로 이번 프레임 정점 계산
 
 Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render → Present 수행)
   ├─ ClearDepth(g_SceneDepthBuffer)
   ├─ ClearColor(g_SceneColorBuffer, 회색 RGB 100,100,100)
   ├─ SetRenderTarget(SceneColor RTV, SceneDepth DSV)
   └─ FbxRenderer::Render(ctx, camera, model)
-       SetRootSignature/PSO → SetDynamicConstantBufferView(b0) → SetVertexBuffer/IndexBuffer → DrawIndexed
+       SetRootSignature/PSO → SetDynamicConstantBufferView(b0) → SetDynamicVB(스킨드 정점) → DrawInstanced
 ```
 
 ### Root Signature / 상수

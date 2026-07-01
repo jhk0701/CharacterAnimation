@@ -1,5 +1,40 @@
 # 작업 로그
 
+## 2026-07-02 — Capoeira.fbx 스켈레톤 애니메이션 재생 (CPU 스키닝)
+
+### 목표
+자체 FBX 렌더 경로에 스켈레톤 애니메이션 재생 추가. `Assets/Capoeira.fbx` 사용.
+
+### 구성 파악
+grep으로 확인: `Capoeira.fbx`는 메시(Beta_Surface) + 스킨(Deformer) + 스켈레톤(mixamorig) +
+애니메이션(AnimationStack)을 모두 포함 → **단일 파일 로드**로 자기완결 구현(리타게팅 불필요).
+
+### 구현 (CPU 스키닝)
+- `FbxModel` 재작성(pimpl): 스킨 클러스터에서 본/가중치/바인드행렬 추출, 애니메이션 스택 선택,
+  씬을 보관해 매 프레임 `node->EvaluateGlobalTransform(t)`로 본 글로벌 평가 → LBS.
+- **곱 순서 모호성 회피**: 검증된 `TransformPoint`(=v*M 행벡터) 중첩으로 본-로컬 바인드
+  위치/노멀(`localPos=cp·M·L^-1`, `localNrm`)을 **로드 시 컨트롤포인트당 미리 계산**.
+  런타임은 `Σ w · TransformPoint(G_b(t), localPos)`만 수행(정확 + CP 단위라 저비용). 마지막 Z 반전.
+- `FbxRenderer`: 매 프레임 `GraphicsContext::SetDynamicVB`로 스킨드 정점 업로드 + `DrawInstanced`
+  (비인덱스). 셰이더/RootSignature/정점 포맷 불변.
+- `Main.cpp`: `Assets/Capoeira.fbx` 로드, `Update`에서 `m_FbxModel.Update(deltaT)` 호출(루프 재생).
+
+### 이슈 및 해결
+- **정지(바인드 포즈)**: 애니메이션이 시간에 따라 안 바뀜. 진단 결과 stackCount=2에서
+  `Take 001`(빈 스택, curvedBones=0)을 고르고 있었고 실제 애니는 `mixamo.com`(curvedBones=52).
+  → **본에 애니메이션 커브가 연결된 스택**을 선택하도록 변경(빈 스택 회피).
+- **메시 폭발(산산조각)**: 스택 수정 후 움직이나 정점이 흩어짐 → 스킨 행렬 곱 순서/규약 오류.
+  → 위의 "본-로컬 바인드 미리 계산" 방식으로 교체해 해결(검증된 단일 변환만 사용).
+
+### 검증 (Verify)
+- 빌드: Character Debug|x64 — 오류 0개.
+- 실행: 회색 배경 위 흰색 캐릭터가 **카포에라 동작을 재생**(프레임마다 포즈 변화, 메시 온전,
+  관절 자연스럽게 굽음)함을 다중 스크린샷으로 확인. CPU 스키닝 ~18ms(Debug).
+
+### 다음 단계
+- GPU 스키닝 업그레이드(BLENDINDICES/WEIGHT + 본 행렬 StructuredBuffer + VS LBS).
+- 프레임 보간, 애니메이션 블렌딩/전환, 다중 클립.
+
 ## 2026-07-02 — X Bot.fbx(스켈레탈 메시) 바인드 포즈 렌더 + 흰색 diffuse
 
 ### 목표

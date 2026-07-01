@@ -71,7 +71,7 @@ void FbxRenderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, c
     ctx.SetPipelineState(m_PSO);
     ctx.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     ctx.SetDynamicConstantBufferView(0, sizeof(cb), &cb);
-    ctx.SetVertexBuffer(0, model.VertexBufferView());
-    ctx.SetIndexBuffer(model.IndexBufferView());
-    ctx.DrawIndexed(model.IndexCount());
+    // 매 프레임 CPU 스키닝된 전개 정점을 동적 VB로 업로드(비인덱스 드로우).
+    ctx.SetDynamicVB(0, model.VertexCount(), sizeof(FbxModel::Vertex), model.SkinnedVertices());
+    ctx.DrawInstanced(model.VertexCount(), 1, 0, 0);
 }
