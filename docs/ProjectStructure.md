@@ -635,3 +635,57 @@ public:
 };
 CREATE_APPLICATION(MyApp)
 ```
+
+---
+
+## 12. Character 프로젝트 — 자체 FBX 직접 렌더 경로
+
+`MiniEngine/Character/`는 Model 프로젝트의 로딩/렌더 파이프라인(`Renderer::LoadModel`,
+`ModelData`, `.mini` 캐시, `MeshSorter`)을 사용하지 않고, **FBX SDK로 직접 파싱한 뒤 Core의
+그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/cube.fbx`
+정적 메시 렌더까지 구현.)
+
+### 구성 파일
+
+| 파일 | 역할 |
+|------|------|
+| `FbxModel.{h,cpp}` | FBX SDK 파싱 → position+normal 전개 + 순차 인덱스 → `ByteAddressBuffer` VB/IB 업로드, 바운딩 스피어 계산 |
+| `FbxRenderer.{h,cpp}` | `RootSignature`(b0 CBV) + `GraphicsPSO` 생성, `Render()`에서 상수 세팅 후 `DrawIndexed` |
+| `Shaders/SimpleVS.hlsl`, `SimplePS.hlsl` | 최소 정점/픽셀 셰이더(ViewProj 변환 + N·L 조명). FxCompile로 `CompiledShaders/*.h` 자동 생성 |
+| `Main.cpp` | `IGameApp` 구현. `FbxModel`/`FbxRenderer`로 큐브 로드·렌더, 회색 배경 |
+
+### 렌더 흐름
+
+```
+Character::Startup()
+  ├─ FbxRenderer::Initialize()   ← RootSignature + PSO 생성
+  ├─ FbxModel::Load("Assets/cube.fbx")
+  │    FbxImporter → Import → AxisSystem::DirectX / SystemUnit::m / Triangulate
+  │    → 노드 월드 변환 베이크 → 정점/인덱스 → ByteAddressBuffer VB/IB
+  └─ OrbitCamera 타깃 = 모델 바운딩 스피어
+
+Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render → Present 수행)
+  ├─ ClearDepth(g_SceneDepthBuffer)
+  ├─ ClearColor(g_SceneColorBuffer, 회색 RGB 100,100,100)
+  ├─ SetRenderTarget(SceneColor RTV, SceneDepth DSV)
+  └─ FbxRenderer::Render(ctx, camera, model)
+       SetRootSignature/PSO → SetDynamicConstantBufferView(b0) → SetVertexBuffer/IndexBuffer → DrawIndexed
+```
+
+### Root Signature / 상수
+
+| 슬롯 | 내용 |
+|------|------|
+| b0 (CBV) | `float4x4 ViewProj; float3 SunDirection; float pad;` |
+
+- 정점 포맷: `POSITION`(R32G32B32_FLOAT) + `NORMAL`(R32G32B32_FLOAT), stride 24.
+- 셰이더는 오프라인 FxCompile(`Build.props` 전역 규칙, 변수명 `g_p<파일명>`).
+- 렌더 상태: `RasterizerTwoSided`(축 변환에 따른 와인딩 반전 대응), `BlendDisable`,
+  `DepthStateReadWrite`.
+
+### 주의점
+
+- `FbxAxisSystem::DirectX` 변환이 핸드니스를 뒤집어 삼각형 와인딩이 전역 반전되므로,
+  후면 컬링을 켜면 메시가 통째로 사라진다. 현재는 `RasterizerTwoSided`로 회피.
+- TAA 미사용(`TemporalEffects::EnableTAA = false`) → `ResolveImage` 불필요, 지터 없는 뷰포트.
+- Model 프로젝트 참조는 현재 링크만 유지(미사용). 자세한 작업 내역은 `docs/log.md` 참조.
