@@ -18,6 +18,7 @@
 #include "Renderer.h"
 #include "Model.h"
 #include "glTF.h"
+#include "FBX.h"
 #include "ModelH3D.h"
 #include "TextureManager.h"
 #include "TextureConvert.h"
@@ -190,6 +191,12 @@ std::shared_ptr<Model> Renderer::LoadModel(const std::wstring& filePath, bool fo
         if (fileExt == L"gltf" || fileExt == L"glb")
         {
             glTF::Asset asset(filePath);
+            if (!BuildModel(modelData, asset))
+                return nullptr;
+        }
+        else if (fileExt == L"fbx") 
+        {
+            FBX::Asset asset(filePath);
             if (!BuildModel(modelData, asset))
                 return nullptr;
         }

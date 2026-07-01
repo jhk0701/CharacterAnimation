@@ -109,7 +109,7 @@ namespace FBX
     class Asset 
     {
     public:
-        Asset() {};
+        Asset() = default;
         Asset(const std::wstring& filePath) { Parse(filePath); }
     
         bool Parse(const std::wstring& filePath);
