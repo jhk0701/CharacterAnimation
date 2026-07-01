@@ -23,12 +23,12 @@
     <PlatformToolset>v142</PlatformToolset>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <TargetRuntime>Native</TargetRuntime>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <EmbedManifest>false</EmbedManifest>
   </PropertyGroup>
@@ -39,30 +39,26 @@
     <Import Project="..\PropertySheets\Build.props" />
     <Import Project="..\PropertySheets\Desktop.props" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="..\PropertySheets\FbxSdk.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <Import Project="..\PropertySheets\FbxSdk.props" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="..\PropertySheets\FbxSdk.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>..\..\Packages\FBX-SDK.2020.3.9\lib\x64\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\..\Packages\FBX-SDK.2020.3.9\include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
-    <LibraryPath>..\..\Packages\FBX-SDK.2020.3.9\lib\x64\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\..\Packages\FBX-SDK.2020.3.9\include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>..\..\Packages\FBX-SDK.2020.3.9\lib\x64\$(Configuration);$(LibraryPath)</LibraryPath>
-    <IncludePath>..\..\Packages\FBX-SDK.2020.3.9\include;$(IncludePath)</IncludePath>
+  <PropertyGroup>
+    <LibraryPath>$(FbxLibDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FbxIncludeDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>..\Model;..\..\Packages\FBX-SDK.2020.3.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Model;$(FbxIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalOptions Condition="'$(Configuration)'=='Debug'">/nodefaultlib:MSVCRT %(AdditionalOptions)</AdditionalOptions>
@@ -116,11 +112,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalLibraryDirectories>..\..\Packages\FBX-SDK.2020.3.9\lib\x64\$(Configuration);..\Build\$(Platform)\$(Configuration)\Output\Core;..\Build\$(Platform)\$(Configuration)\Output\Model;..\..\Packages\directxmesh_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\directxtex_desktop_win10.2019.2.7.1\lib\x64\Release;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(FbxLibDir);..\Build\$(Platform)\$(Configuration)\Output\Core;..\Build\$(Platform)\$(Configuration)\Output\Model;..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\lib_release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>zlibstatic.lib;Core.lib;Model.lib;libfbxsdk.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y /d "$(FbxDllPath)" "$(OutDir)"</Command>
+    </PostBuildEvent>
     <ClCompile>
-      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile>
@@ -133,6 +131,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\Packages\directxtex_desktop_win10.2021.1.10.2\build\native\directxtex_desktop_win10.targets" Condition="Exists('..\..\Packages\directxtex_desktop_win10.2021.1.10.2\build\native\directxtex_desktop_win10.targets')" />
+    <Import Project="..\..\Packages\directxmesh_desktop_win10.2021.1.10.1\build\native\directxmesh_desktop_win10.targets" Condition="Exists('..\..\Packages\directxmesh_desktop_win10.2021.1.10.1\build\native\directxmesh_desktop_win10.targets')" />
     <Import Project="..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets" Condition="Exists('..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets')" />
     <Import Project="..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets" Condition="Exists('..\..\Packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" />
     <Import Project="..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets" Condition="Exists('..\..\Packages\Assimp.3.0.0\build\native\Assimp.targets')" />

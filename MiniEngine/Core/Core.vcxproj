@@ -20,13 +20,13 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <Keyword>Win32Proj</Keyword>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <TargetRuntime>Native</TargetRuntime>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <EmbedManifest>false</EmbedManifest>
     <GenerateManifest>false</GenerateManifest>
@@ -441,8 +441,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets" Condition="Exists('..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets')" />
-    <Import Project="..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets" Condition="Exists('..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets')" />
+    <Import Project="..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets" Condition="Exists('..\..\Packages\zlib-msvc-x64.1.2.11.8900\build\native\zlib-msvc-x64.targets')" />
+    <Import Project="..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets" Condition="Exists('..\..\Packages\WinPixEventRuntime.1.0.210209001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

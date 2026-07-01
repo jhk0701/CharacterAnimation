@@ -1,4 +1,4 @@
-#include "ModelLoader.h"
+ï»¿#include "ModelLoader.h"
 #include "Renderer.h"
 #include "FBX.h"
 #include "TextureConvert.h"
@@ -53,7 +53,7 @@ static void OptimizeFbxPrimitive(
 
     void* indices = outPrim.IB->data();
 
-    // ¹Ù¿îµù º¼·ý
+    // ë°”ìš´ë”© ë³¼ë¥¨
     {
         Vector3 minLS(inPrim.minPos.x, inPrim.minPos.y, inPrim.minPos.z);
         Vector3 maxLS(inPrim.maxPos.x, inPrim.maxPos.y, inPrim.maxPos.z);
