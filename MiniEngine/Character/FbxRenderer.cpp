@@ -18,9 +18,11 @@ namespace
     // SimpleVS/PS.hlsl 의 cbuffer(b0) 레이아웃과 일치해야 한다.
     __declspec(align(16)) struct SimpleConstants
     {
-        Math::Matrix4 ViewProj;    // 64 bytes
-        XMFLOAT3      SunDirection; // 12 bytes
-        float         pad;          // 4 bytes
+        Math::Matrix4 ViewProj;    // 64 bytes (offset 0)
+        XMFLOAT3      SunDirection; // 12 bytes (offset 64)
+        float         pad0;         // 4 bytes  (offset 76)
+        XMFLOAT3      BaseColor;    // 12 bytes (offset 80)
+        float         pad1;         // 4 bytes  (offset 92) -> 96
     };
 }
 
@@ -58,9 +60,12 @@ void FbxRenderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, c
 
     SimpleConstants cb;
     cb.ViewProj = camera.GetViewProjMatrix();
+    // 카메라 정면-상단에서 오는 광원(-SunDir 방향으로 조명) -> 정면이 밝게 보임.
     XMStoreFloat3(&cb.SunDirection,
-        XMVector3Normalize(XMVectorSet(-0.3f, -1.0f, -0.4f, 0.0f)));
-    cb.pad = 0.0f;
+        XMVector3Normalize(XMVectorSet(0.3f, -0.7f, -1.0f, 0.0f)));
+    cb.pad0 = 0.0f;
+    cb.BaseColor = XMFLOAT3(1.0f, 1.0f, 1.0f);   // 흰색 diffuse
+    cb.pad1 = 0.0f;
 
     ctx.SetRootSignature(m_RootSig);
     ctx.SetPipelineState(m_PSO);

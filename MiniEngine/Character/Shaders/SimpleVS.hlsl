@@ -5,7 +5,9 @@ cbuffer Constants : register(b0)
 {
     float4x4 ViewProj;      // world->clip (정점은 이미 월드 공간으로 베이크됨)
     float3   SunDirection;
-    float    pad;
+    float    pad0;
+    float3   BaseColor;     // diffuse (흰색 = 선명한 렌더)
+    float    pad1;
 };
 
 struct VSInput

@@ -84,10 +84,12 @@ namespace
 
                 FbxModel::Vertex vtx;
                 vtx.pos = TransformPoint(world, controlPoints[cpIdx]);
+                vtx.pos.z = -vtx.pos.z;   // RH Y-up -> LH Y-up (DirectX)
 
                 FbxVector4 n(0, 1, 0, 0);
                 mesh->GetPolygonVertexNormal(pi, vi, n);
                 vtx.normal = TransformDir(world, n);
+                vtx.normal.z = -vtx.normal.z;
 
                 minPos.x = min(minPos.x, vtx.pos.x);
                 minPos.y = min(minPos.y, vtx.pos.y);
@@ -129,8 +131,9 @@ bool FbxModel::Load(const std::wstring& filePath)
     }
     importer->Destroy();
 
-    // 좌표계/단위 변환 후 삼각화.
-    FbxAxisSystem::DirectX.ConvertScene(scene);
+    // 단위만 미터로 변환(방향 불변). 축은 FbxAxisSystem::DirectX 변환이 파일에 따라 Y까지
+    // 뒤집는 문제가 있어 사용하지 않고, 바인드 아래에서 Z만 반전해 RH Y-up -> LH Y-up으로 직접 변환.
+    // (X Bot.fbx 원본: Y-up, 오른손 좌표계.)
     FbxSystemUnit::m.ConvertScene(scene);
 
     FbxGeometryConverter geomConv(manager);

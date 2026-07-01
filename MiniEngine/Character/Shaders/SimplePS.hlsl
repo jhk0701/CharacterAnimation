@@ -5,7 +5,9 @@ cbuffer Constants : register(b0)
 {
     float4x4 ViewProj;
     float3   SunDirection;
-    float    pad;
+    float    pad0;
+    float3   BaseColor;     // diffuse (흰색 = 선명한 렌더)
+    float    pad1;
 };
 
 struct PSInput
@@ -19,8 +21,8 @@ float4 main(PSInput psInput) : SV_TARGET
     float3 n   = normalize(psInput.normal);
     float  ndl = saturate(dot(n, normalize(-SunDirection)));
 
-    float3 baseColor = float3(0.8, 0.8, 0.8);
-    float3 color = baseColor * (0.2 + 0.8 * ndl);   // 앰비언트 0.2 + 디퓨즈
+    // 앰비언트를 배경(0.39)보다 높여 흰색 캐릭터가 선명히 드러나도록 함.
+    float3 color = BaseColor * (0.55 + 0.45 * ndl);
 
     return float4(color, 1.0);
 }

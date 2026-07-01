@@ -61,8 +61,8 @@ void Character::Startup( void )
 
     m_FbxRenderer.Initialize();
 
-    if (!m_FbxModel.Load(L"Assets/cube.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/cube.fbx\n");
+    if (!m_FbxModel.Load(L"Assets/X Bot.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/X Bot.fbx\n");
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(

@@ -642,8 +642,8 @@ CREATE_APPLICATION(MyApp)
 
 `MiniEngine/Character/`는 Model 프로젝트의 로딩/렌더 파이프라인(`Renderer::LoadModel`,
 `ModelData`, `.mini` 캐시, `MeshSorter`)을 사용하지 않고, **FBX SDK로 직접 파싱한 뒤 Core의
-그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/cube.fbx`
-정적 메시 렌더까지 구현.)
+그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/X Bot.fbx`
+스켈레탈 메시를 **바인드 포즈 + 흰색 diffuse**로 렌더까지 구현. 스킨/애니메이션은 다음 단계.)
 
 ### 구성 파일
 
@@ -659,9 +659,10 @@ CREATE_APPLICATION(MyApp)
 ```
 Character::Startup()
   ├─ FbxRenderer::Initialize()   ← RootSignature + PSO 생성
-  ├─ FbxModel::Load("Assets/cube.fbx")
-  │    FbxImporter → Import → AxisSystem::DirectX / SystemUnit::m / Triangulate
-  │    → 노드 월드 변환 베이크 → 정점/인덱스 → ByteAddressBuffer VB/IB
+  ├─ FbxModel::Load("Assets/X Bot.fbx")
+  │    FbxImporter → Import → SystemUnit::m(단위만) / Triangulate
+  │    → 노드 월드 변환 베이크 + Z 반전(RH Y-up→LH Y-up) → 정점/인덱스 → ByteAddressBuffer VB/IB
+  │    (스킨 메시라도 바인드 포즈 지오메트리는 스키닝 없이 그대로 렌더됨)
   └─ OrbitCamera 타깃 = 모델 바운딩 스피어
 
 Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render → Present 수행)
@@ -676,16 +677,19 @@ Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render
 
 | 슬롯 | 내용 |
 |------|------|
-| b0 (CBV) | `float4x4 ViewProj; float3 SunDirection; float pad;` |
+| b0 (CBV) | `float4x4 ViewProj; float3 SunDirection; float pad0; float3 BaseColor; float pad1;` |
 
+- `BaseColor`는 diffuse. 현재 흰색(1,1,1) 고정으로 선명한 렌더. PS 조명은 `BaseColor*(0.55+0.45*NdL)`.
 - 정점 포맷: `POSITION`(R32G32B32_FLOAT) + `NORMAL`(R32G32B32_FLOAT), stride 24.
 - 셰이더는 오프라인 FxCompile(`Build.props` 전역 규칙, 변수명 `g_p<파일명>`).
-- 렌더 상태: `RasterizerTwoSided`(축 변환에 따른 와인딩 반전 대응), `BlendDisable`,
+- 렌더 상태: `RasterizerTwoSided`(Z 반전에 따른 와인딩 반전 대응), `BlendDisable`,
   `DepthStateReadWrite`.
 
 ### 주의점
 
-- `FbxAxisSystem::DirectX` 변환이 핸드니스를 뒤집어 삼각형 와인딩이 전역 반전되므로,
-  후면 컬링을 켜면 메시가 통째로 사라진다. 현재는 `RasterizerTwoSided`로 회피.
+- **축 처리**: `FbxAxisSystem::DirectX.ConvertScene`는 파일에 따라 Y축까지 뒤집는 문제가 있어
+  사용하지 않는다. 대신 단위만 미터로 변환(`FbxSystemUnit::m`)하고, 베이크 시 **Z만 반전**해
+  RH Y-up → LH Y-up(DirectX)으로 직접 변환한다. Z 반전으로 와인딩이 뒤집히므로 후면 컬링을
+  켜면 메시가 사라진다 → `RasterizerTwoSided`로 회피.
 - TAA 미사용(`TemporalEffects::EnableTAA = false`) → `ResolveImage` 불필요, 지터 없는 뷰포트.
 - Model 프로젝트 참조는 현재 링크만 유지(미사용). 자세한 작업 내역은 `docs/log.md` 참조.
