@@ -36,6 +36,9 @@
     <Filter Include="Source Files\Engine\Scene">
       <UniqueIdentifier>{b33d2264-24e3-4cc5-b73b-aa2d6e0085a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Engine\FBX">
+      <UniqueIdentifier>{5403d22c-80e2-4417-852e-5101427133a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -66,6 +69,9 @@
     <ClCompile Include="Component.cpp">
       <Filter>Source Files\Engine\Object\Component</Filter>
     </ClCompile>
+    <ClCompile Include="FBX.cpp">
+      <Filter>Source Files\Engine\FBX</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -92,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="Component.h">
       <Filter>Source Files\Engine\Object\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="FBX.h">
+      <Filter>Source Files\Engine\FBX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

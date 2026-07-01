@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <FBXSDK_ROOT Condition="'$(FBXSDK_ROOT)'==''">C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.4</FBXSDK_ROOT>
+    <FbxLibSubDir Condition="'$(Configuration)'=='Debug'">debug</FbxLibSubDir>
+    <FbxLibSubDir Condition="'$(Configuration)'!='Debug'">release</FbxLibSubDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <FbxIncludeDir>$(FBXSDK_ROOT)\include</FbxIncludeDir>
+    <FbxLibDir>$(FBXSDK_ROOT)\lib\vs2019\x64\$(FbxLibSubDir)</FbxLibDir>
+    <FbxDllPath>$(FbxLibDir)\libfbxsdk.dll</FbxDllPath>
+  </PropertyGroup>
+</Project>
