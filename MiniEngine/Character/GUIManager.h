@@ -14,4 +14,9 @@ public:
 
 	void UpdateGUI();
 	void RenderGUI(GraphicsContext& gfxContext);
+
+private:
+	ID3D12DescriptorHeap* m_pGuiDesc;
+
+	void InitGuiDesc(ID3D12Device* pDevice);
 };

@@ -68,7 +68,7 @@ namespace GameCore
 
         PostEffects::Render();
 
-        GraphicsContext& UiContext = GraphicsContext::Begin(L"Render UI");
+        /*GraphicsContext& UiContext = GraphicsContext::Begin(L"Render UI");
         UiContext.TransitionResource(g_OverlayBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
         UiContext.ClearColor(g_OverlayBuffer);
         UiContext.SetRenderTarget(g_OverlayBuffer.GetRTV());
@@ -79,7 +79,7 @@ namespace GameCore
         UiContext.SetViewportAndScissor(0, 0, g_OverlayBuffer.GetWidth(), g_OverlayBuffer.GetHeight());
         EngineTuning::Display( UiContext, 10.0f, 40.0f, 1900.0f, 1040.0f );
 
-        UiContext.Finish();
+        UiContext.Finish();*/
 
         Display::Present();
 
@@ -94,7 +94,6 @@ namespace GameCore
 
 
     HWND g_hWnd = nullptr;
-    HWND* IGameApp::GetHwnd() const { return &g_hWnd; }
 
     LRESULT CALLBACK WndProc( HWND, UINT, WPARAM, LPARAM );
 

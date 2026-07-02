@@ -5,6 +5,7 @@
 #include "GameInput.h"
 #include "CommandContext.h"
 #include "BufferManager.h"
+#include "Display.h"
 
 #include "TemporalEffects.h"
 #include "PostEffects.h"
@@ -71,18 +72,20 @@ void Character::Startup( void )
         m_FbxModel.IsLoaded() ? m_FbxModel.GetBoundingSphere()
                               : Math::BoundingSphere(Math::Vector3(Math::kZero), 5.0f),
         Math::Vector3(Math::kYUnitVector)));
-
     
-    GUIManager::GetInstance()->Init(GetHwnd(), Graphics::g_Device, Graphics::g_CommandManager.GetCommandQueue(),
-        g_SceneColorBuffer.GetWidth(), g_SceneColorBuffer.GetHeight());
+    GUIManager::GetInstance()->Init(
+        &g_hWnd, 
+        g_Device, 
+        g_CommandManager.GetCommandQueue(),
+        g_SceneColorBuffer.GetWidth(),
+        g_SceneColorBuffer.GetHeight());
 }
 
 void Character::Cleanup( void )
 {
-    EngineCore::GetInstance()->Clear();
-    
     FbxModel::Shutdown();
 
+    EngineCore::GetInstance()->Clear();
     GUIManager::GetInstance()->Clear();
 }
 
@@ -123,7 +126,8 @@ void Character::RenderScene( void )
     gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV());
     gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
-    m_FbxRenderer.Render(gfxContext, m_Camera, m_FbxModel);
+    m_FbxRenderer.Render(gfxContext, m_Camera, m_FbxModel); // 테스트용 fbx 렌더링
+
     GUIManager::GetInstance()->RenderGUI(gfxContext);
 
     gfxContext.Finish();
