@@ -117,7 +117,6 @@ void Character::RenderScene( void )
 
     gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
     gfxContext.ClearDepth(g_SceneDepthBuffer);
-
     gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
     gfxContext.ClearColor(g_SceneColorBuffer, s_ClearGray);   // 회색 배경
 
@@ -125,8 +124,7 @@ void Character::RenderScene( void )
     gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
     m_FbxRenderer.Render(gfxContext, m_Camera, m_FbxModel);
-
-    GUIManager::GetInstance()->RenderGUI(gfxContext.GetGraphicsContext().GetCommandList());
+    GUIManager::GetInstance()->RenderGUI(gfxContext);
 
     gfxContext.Finish();
 }

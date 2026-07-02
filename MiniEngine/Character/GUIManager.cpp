@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "GUIManager.h"
+#include "CommandContext.h"
 
 GUIManager::GUIManager() {};
 GUIManager::~GUIManager() {};
@@ -18,6 +19,7 @@ bool GUIManager::Init(HWND* pHwnd, ID3D12Device* pDevice, ID3D12CommandQueue* pC
 	initInfo.CommandQueue = pCommandQueue;
 	initInfo.NumFramesInFlight = 2;
 	initInfo.RTVFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	// initInfo.SrvDescriptorHeap = 
 
 	if (!ImGui_ImplDX12_Init(&initInfo))
 		return false;
@@ -52,8 +54,8 @@ void GUIManager::UpdateGUI()
 	ImGui::Render();
 }
 
-void GUIManager::RenderGUI(ID3D12GraphicsCommandList* pCommandList)
+void GUIManager::RenderGUI(GraphicsContext& gfxContext)
 {
-	pCommandList->SetDescriptorHeaps(1, );
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCommandList);
+	// pCommandList->SetDescriptorHeaps(1, );
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), gfxContext.GetGraphicsContext().GetCommandList());
 }

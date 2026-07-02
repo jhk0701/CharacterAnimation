@@ -642,6 +642,7 @@ static CallbackTrigger Load("Load Settings", StartLoadFunc, nullptr);
 
 void EngineTuning::Display( GraphicsContext& Context, float x, float y, float w, float h )
 {
+    return;
     GraphRenderer::RenderGraphs(Context, GraphRenderer::GraphType::Profile);
 
     TextContext Text(Context);

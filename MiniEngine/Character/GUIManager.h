@@ -13,5 +13,5 @@ public:
 	void Clear();
 
 	void UpdateGUI();
-	void RenderGUI(ID3D12GraphicsCommandList* pCommandList);
+	void RenderGUI(GraphicsContext& gfxContext);
 };
