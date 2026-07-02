@@ -44,7 +44,12 @@ private:
     D3D12_VIEWPORT m_MainViewport;
     D3D12_RECT     m_MainScissor;
 
+    // TODO : 기능 구현용 임시 모델 데이터 -> MeshComponent로 이전해야함
     ModelData   m_Model;
+    // TODO : 애니메이션 클립만 따로 분리하면 좋을 듯
+    ModelData   m_Anim1; 
+    ModelData   m_Anim2;
+
     Renderer    m_Renderer;
 };
 
@@ -67,6 +72,16 @@ void Character::Startup( void )
 
     if (!m_Model.Load(L"Assets/Walking.fbx"))
         Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");
+
+    /*if (!m_Model.Load(L"Assets/X Bot.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/X Bot.fbx\n");*/
+    /*if (!m_Anim1.Load(L"Assets/Walking.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");*/
+    /*
+    if(!m_Anim2.Load(L"Assets/Capoeira.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/Capoeira.fbx\n");
+    */
+    // m_Model.SetAnim(m_Anim1);
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(

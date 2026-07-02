@@ -72,10 +72,9 @@ void GUIManager::RenderGUI(GraphicsContext& gfxContext)
 {
 	// Graphics::s_
 
+
  	ID3D12GraphicsCommandList* pCmdList = gfxContext.GetGraphicsContext().GetCommandList();
 	pCmdList->SetDescriptorHeaps(1, &m_pGuiDesc);
 
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCmdList);
-
-	// OMSetRenderTargets
 }

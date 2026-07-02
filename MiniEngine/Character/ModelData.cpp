@@ -7,7 +7,6 @@
 #include <stack>
 #include <float.h>
 #include <math.h>
-#include <fbxsdk.h> // TOOD : FBX 모델에 국한된 사용 -> Assimp로 바꿀 것
 
 using namespace DirectX;
 
@@ -71,12 +70,13 @@ struct MeshSkin
 struct ModelData::Impl
 {
     FbxScene* scene = nullptr;      // 보관(런타임 본 평가용, 소유는 FbxManager)
+    FbxAnimStack* animStack = nullptr;
     FbxTime   animStart;
     double    animDuration = 0.0;
     double    time = 0.0;
 
-    std::vector<MeshSkin>           meshes;
-    std::vector<ModelData::Vertex>  skinned;   // 전역 전개 정점(출력)
+    std::vector<MeshSkin>               meshes;
+    std::vector<ModelData::Vertex>      skinned;    // 전역 전개 정점(출력)
 };
 
 ModelData::ModelData() : m_impl(std::make_unique<Impl>()) {}
@@ -117,8 +117,14 @@ static void SkinAtTime(ModelData::Impl& impl, double timeSec)
                     pp = TransformPoint(ms.boneGlobal[in.bone], in.localPos);
                     nn = TransformDirRaw(ms.boneGlobal[in.bone], in.localNrm);
                 }
-                p.x += pp.x * in.weight; p.y += pp.y * in.weight; p.z += pp.z * in.weight;
-                n.x += nn.x * in.weight; n.y += nn.y * in.weight; n.z += nn.z * in.weight;
+
+                p.x += pp.x * in.weight; 
+                p.y += pp.y * in.weight; 
+                p.z += pp.z * in.weight;
+
+                n.x += nn.x * in.weight; 
+                n.y += nn.y * in.weight; 
+                n.z += nn.z * in.weight;
             }
             ms.skinnedPos[cp] = p;
             XMStoreFloat3(&ms.skinnedNrm[cp], XMVector3Normalize(XMLoadFloat3(&n)));
@@ -170,23 +176,19 @@ bool ModelData::Load(const std::wstring& filePath)
 
     m_impl->scene = scene;   // 보관(런타임 본 평가). 소유는 FbxManager.
 
-    // 스킨 메시 수집.
+    // 스킨 메시 수집. DFS
     uint32_t totalPV = 0;
-    std::vector<FbxNode*> stack;
+    std::stack<FbxNode*> stack;
     if (FbxNode* root = scene->GetRootNode())
-    {
-        stack.reserve(root->GetChildCount());
-
         for (int i = 0; i < root->GetChildCount(); ++i)
-            stack.push_back(root->GetChild(i));
-    }
+            stack.push(root->GetChild(i));
 
     while (!stack.empty())
     {
-        FbxNode* node = stack.back();
-        stack.pop_back();
+        FbxNode* node = stack.top();
+        stack.pop();
         for (int i = 0; i < node->GetChildCount(); ++i)
-            stack.push_back(node->GetChild(i));
+            stack.push(node->GetChild(i));
 
         FbxMesh* mesh = node->GetMesh();
         if (!mesh)
@@ -295,8 +297,18 @@ bool ModelData::Load(const std::wstring& filePath)
         return false;
     }
 
-    // 애니메이션 스택 선택: 본에 애니메이션 커브가 실제로 연결된 스택을 고른다.
+    // 애니메이션 스택 선택
     {
+        //FbxAnimStack* animStack = FbxAnimStack::Create(scene, "Default Stack");
+        //animStack->LocalStop = FBXSDK_TIME_ONE_SECOND;
+        //animStack->Description = "Default animation stack";
+
+        //FbxAnimLayer* animLayer = FbxAnimLayer::Create(scene, "Base Layer");
+        //animStack->AddMember(animStack);
+        //// 블랜드 모드 설정
+        //bool val;
+        //animLayer->SetBlendModeBypass(EFbxType::eFbxBool, true);
+
         const int stackCount = scene->GetSrcObjectCount<FbxAnimStack>();
         const std::vector<FbxNode*>& bones = m_impl->meshes[0].bones;
         FbxAnimStack* chosen = nullptr;
@@ -311,7 +323,9 @@ bool ModelData::Load(const std::wstring& filePath)
             {
                 FbxAnimLayer* layer = st->GetMember<FbxAnimLayer>(li);
                 for (FbxNode* bn : bones)
-                    if (bn && (bn->LclRotation.GetCurve(layer) || bn->LclTranslation.GetCurve(layer)
+                    if (bn && 
+                        (bn->LclRotation.GetCurve(layer) 
+                        || bn->LclTranslation.GetCurve(layer)
                         || bn->LclScaling.GetCurve(layer)))
                         ++curved;
             }
@@ -323,18 +337,21 @@ bool ModelData::Load(const std::wstring& filePath)
                 break; 
             }
         }
+
         if (!chosen && stackCount > 0)   // 폴백
         {
             chosen = scene->GetSrcObject<FbxAnimStack>(0);
             chosenSpan = chosen->GetLocalTimeSpan();
         }
+
         if (chosen)
         {
             scene->SetCurrentAnimationStack(chosen);
             scene->GetAnimationEvaluator()->Reset();
             m_impl->animStart = chosenSpan.GetStart();
             m_impl->animDuration = (chosenSpan.GetStop() - chosenSpan.GetStart()).GetSecondDouble();
-            Utility::Printf("[Mesh] anim stack '%s' dur=%.2fs\n",
+
+            Utility::Printf("[Animation] anim stack '%s' dur=%.2fs\n",
                 chosen->GetName(), (float)m_impl->animDuration);
         }
     }
@@ -384,4 +401,24 @@ void ModelData::Shutdown()
         g_FbxManager->Destroy();   // 하위 씬도 함께 해제됨.
         g_FbxManager = nullptr;
     }
+}
+
+// TODO: 리팩토링 필요
+void ModelData::SetAnim(const ModelData& animModel)
+{
+    if (!animModel.IsLoaded())
+        return;
+    
+    FbxAnimStack* st = animModel.m_impl->scene->GetCurrentAnimationStack();
+    if (!st)
+        return;
+
+    FbxTimeSpan timeSpan = st->GetLocalTimeSpan();
+    m_impl->scene->SetCurrentAnimationStack(st);
+    m_impl->scene->GetAnimationEvaluator()->Reset();
+    m_impl->animStart = timeSpan.GetStart();
+    m_impl->animDuration = (timeSpan.GetStop() - timeSpan.GetStart()).GetSecondDouble();
+
+    Utility::Printf("[Set Animation] anim stack '%s' dur=%.2fs\n",
+        st->GetName(), (float)m_impl->animDuration);
 }

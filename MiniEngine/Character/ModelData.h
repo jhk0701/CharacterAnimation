@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <DirectXMath.h>
+#include <fbxsdk.h> // TOOD : FBX 모델에 국한된 사용 -> Assimp로 바꿀 것
 
 #include "Math/BoundingSphere.h"
 
@@ -42,7 +43,7 @@ public:
 
     struct Impl;   // 구현 세부(불투명). .cpp에서 정의.
 
-    // 애니메이션 추가
+    void SetAnim(const ModelData& animModel);
 
 private:
     std::unique_ptr<Impl> m_impl;
