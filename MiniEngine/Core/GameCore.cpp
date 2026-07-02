@@ -27,7 +27,9 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx12.h>
 
-#pragma comment(lib, "runtimeobject.lib") 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#pragma comment(lib, "runtimeobject.lib")
 
 namespace GameCore
 {
@@ -161,6 +163,10 @@ namespace GameCore
     //--------------------------------------------------------------------------------------
     LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
+        // imgui가 먼저 입력 메시지를 처리하도록 위임 (마우스/키보드)
+        if (ImGui::GetCurrentContext() != nullptr && ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+            return true;
+
         switch( message )
         {
         case WM_SIZE:

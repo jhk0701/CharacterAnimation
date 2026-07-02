@@ -16,6 +16,7 @@
     <FxCompile>
       <PreprocessorDefinitions>_GAMING_DESKTOP=1</PreprocessorDefinitions>
       <ShaderModel>6.2</ShaderModel>
+      <AdditionalOptions>-HV 2021 %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

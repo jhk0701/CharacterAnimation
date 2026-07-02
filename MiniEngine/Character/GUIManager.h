@@ -9,7 +9,7 @@ class GUIManager
 	SINGLETON(GUIManager)
 
 public:
-	bool Init(HWND* pHwnd, ID3D12Device* pDevice, ID3D12CommandQueue* pCommandQueue, float w, float h);
+	bool Init(HWND hWnd, ID3D12Device* pDevice, ID3D12CommandQueue* pCommandQueue, float w, float h);
 	void Clear();
 
 	void UpdateGUI();

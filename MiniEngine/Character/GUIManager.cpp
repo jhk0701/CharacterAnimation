@@ -6,7 +6,7 @@
 GUIManager::GUIManager() {};
 GUIManager::~GUIManager() {};
 
-bool GUIManager::Init(HWND* pHwnd, ID3D12Device* pDevice, ID3D12CommandQueue* pCommandQueue, float w, float h)
+bool GUIManager::Init(HWND hWnd, ID3D12Device* pDevice, ID3D12CommandQueue* pCommandQueue, float w, float h)
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -14,20 +14,23 @@ bool GUIManager::Init(HWND* pHwnd, ID3D12Device* pDevice, ID3D12CommandQueue* pC
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(w, h);
 	ImGui::StyleColorsDark();
-	
-	InitGuiDesc(pDevice); // imgui�� SrvDescHeap �ʱ�ȭ
 
-	ImGui_ImplDX12_InitInfo initInfo;
+	InitGuiDesc(pDevice); // imgui�� SrvDescHeap �ʱ�ȭ
+
+	ImGui_ImplDX12_InitInfo initInfo = {};
 	initInfo.Device = pDevice;
 	initInfo.CommandQueue = pCommandQueue;
 	initInfo.NumFramesInFlight = 3; //  Display::SWAP_CHAIN_BUFFER_COUNT
-	initInfo.RTVFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // g_OverlayBuffer 포맷과 일치해야 함
 	initInfo.SrvDescriptorHeap = m_pGuiDesc;
+	// 단일 디스크립터 힙(레거시) 경로: 폰트 아틀라스 SRV용 CPU/GPU 핸들 지정
+	initInfo.LegacySingleSrvCpuDescriptor = m_pGuiDesc->GetCPUDescriptorHandleForHeapStart();
+	initInfo.LegacySingleSrvGpuDescriptor = m_pGuiDesc->GetGPUDescriptorHandleForHeapStart();
 
 	if (!ImGui_ImplDX12_Init(&initInfo))
 		return false;
 
-	if (!ImGui_ImplWin32_Init(pHwnd))
+	if (!ImGui_ImplWin32_Init(hWnd))
 		return false;
 
 	return true;
@@ -53,16 +56,14 @@ void GUIManager::Clear()
 
 void GUIManager::UpdateGUI()
 {
-	ImGui_ImplDX12_NewFrame(); // GUI ������ ����
+	ImGui_ImplDX12_NewFrame(); // GUI ������ ����
 	ImGui_ImplWin32_NewFrame();
 
-	// �׽�Ʈ
+	// �׽�Ʈ
 	ImGui::NewFrame();
 
 	ImGui::Begin("Test GUI");
 	ImGui::Text("Hello World");
-
-	ImGui::ShowDemoWindow();
 
 	ImGui::End();
 	ImGui::Render();
@@ -70,9 +71,6 @@ void GUIManager::UpdateGUI()
 
 void GUIManager::RenderGUI(GraphicsContext& gfxContext)
 {
-	// Graphics::s_
-
-
  	ID3D12GraphicsCommandList* pCmdList = gfxContext.GetGraphicsContext().GetCommandList();
 	pCmdList->SetDescriptorHeaps(1, &m_pGuiDesc);
 

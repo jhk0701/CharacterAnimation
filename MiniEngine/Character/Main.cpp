@@ -91,8 +91,8 @@ void Character::Startup( void )
         Math::Vector3(Math::kYUnitVector)));
 
     GUIManager::GetInstance()->Init(
-        &g_hWnd, 
-        g_Device, 
+        g_hWnd,
+        g_Device,
         g_CommandManager.GetCommandQueue(),
         g_SceneColorBuffer.GetWidth(),
         g_SceneColorBuffer.GetHeight());
