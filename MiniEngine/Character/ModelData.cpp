@@ -5,6 +5,8 @@
 
 #include <vector>
 #include <stack>
+#include <string>
+#include <unordered_map>
 #include <float.h>
 #include <math.h>
 
@@ -56,7 +58,8 @@ struct Influence { int bone; float weight; XMFLOAT3 localPos; XMFLOAT3 localNrm;
 
 struct MeshSkin
 {
-    std::vector<FbxNode*> bones;                      // 클러스터별 연결 본
+    std::vector<FbxNode*> bones;                      // 클러스터별 연결 본(자체 씬)
+    std::vector<FbxNode*> animBones;                  // 리타게트 소스 본(애님 씬, 이름 매칭). 없으면 nullptr
     std::vector<std::vector<Influence>> cpInfluence;  // 컨트롤포인트별 영향
     std::vector<int>      pvCP;                        // 폴리곤-정점 -> 컨트롤포인트
     uint32_t              pvBase = 0;                  // 전역 스킨드 배열 시작 오프셋
@@ -69,14 +72,14 @@ struct MeshSkin
 
 struct ModelData::Impl
 {
-    FbxScene* scene = nullptr;      // 보관(런타임 본 평가용, 소유는 FbxManager)
+    FbxScene* scene = nullptr;
     FbxAnimStack* animStack = nullptr;
-    FbxTime   animStart;
-    double    animDuration = 0.0;
-    double    time = 0.0;
+    FbxTime animStart;
+    double animDuration = 0.0;
+    double time = 0.0;
 
-    std::vector<MeshSkin>               meshes;
-    std::vector<ModelData::Vertex>      skinned;    // 전역 전개 정점(출력)
+    std::vector<MeshSkin> meshes;
+    std::vector<ModelData::Vertex> skinned; 
 };
 
 ModelData::ModelData() : m_impl(std::make_unique<Impl>()) {}
@@ -98,7 +101,12 @@ static void SkinAtTime(ModelData::Impl& impl, double timeSec)
         const int boneCount = (int)ms.bones.size();
         ms.boneGlobal.resize(boneCount);
         for (int b = 0; b < boneCount; ++b)
-            ms.boneGlobal[b] = ms.bones[b]->EvaluateGlobalTransform(ft);
+        {
+            // 리타게트 소스가 있으면 애님 씬의 이름-매칭 본을 평가(동일 바인드 포즈 가정).
+            // 없으면 자체 본을 평가(회귀 없음).
+            FbxNode* src = (b < (int)ms.animBones.size() && ms.animBones[b]) ? ms.animBones[b] : ms.bones[b];
+            ms.boneGlobal[b] = src->EvaluateGlobalTransform(ft);
+        }
 
         const int cpCount = (int)ms.cpInfluence.size();
         for (int cp = 0; cp < cpCount; ++cp)
@@ -403,22 +411,59 @@ void ModelData::Shutdown()
     }
 }
 
-// TODO: 리팩토링 필요
 void ModelData::SetAnim(const ModelData& animModel)
 {
-    if (!animModel.IsLoaded())
-        return;
-    
-    FbxAnimStack* st = animModel.m_impl->scene->GetCurrentAnimationStack();
-    if (!st)
+    if (!animModel.IsLoaded() || !animModel.m_impl->scene)
         return;
 
-    FbxTimeSpan timeSpan = st->GetLocalTimeSpan();
-    m_impl->scene->SetCurrentAnimationStack(st);
-    m_impl->scene->GetAnimationEvaluator()->Reset();
-    m_impl->animStart = timeSpan.GetStart();
-    m_impl->animDuration = (timeSpan.GetStop() - timeSpan.GetStart()).GetSecondDouble();
+    FbxScene* animScene = animModel.m_impl->scene;
 
-    Utility::Printf("[Set Animation] anim stack '%s' dur=%.2fs\n",
-        st->GetName(), (float)m_impl->animDuration);
+    // animModel 씬이 선택한 애님 스택을 유지하고 평가기를 리셋(로드 시 이미 선택됨).
+    if (FbxAnimStack* st = animScene->GetCurrentAnimationStack())
+    {
+        animScene->SetCurrentAnimationStack(st);
+        animScene->GetAnimationEvaluator()->Reset();
+    }
+
+    // animModel 씬의 모든 노드를 이름 -> 노드로 매핑.
+    std::unordered_map<std::string, FbxNode*> nameToNode;
+    {
+        std::stack<FbxNode*> stk;
+        if (FbxNode* root = animScene->GetRootNode())
+            for (int i = 0; i < root->GetChildCount(); ++i)
+                stk.push(root->GetChild(i));
+        while (!stk.empty())
+        {
+            FbxNode* n = stk.top(); stk.pop();
+            nameToNode.emplace(n->GetName(), n);
+            for (int i = 0; i < n->GetChildCount(); ++i)
+                stk.push(n->GetChild(i));
+        }
+    }
+
+    // 각 메시의 본을 이름으로 매칭.
+    int matched = 0, total = 0;
+    for (MeshSkin& ms : m_impl->meshes)
+    {
+        const int boneCount = (int)ms.bones.size();
+        ms.animBones.assign(boneCount, nullptr);
+        for (int b = 0; b < boneCount; ++b)
+        {
+            ++total;
+            auto it = nameToNode.find(ms.bones[b]->GetName());
+            if (it != nameToNode.end())
+            {
+                ms.animBones[b] = it->second;
+                ++matched;
+            }
+        }
+    }
+
+    // 타이밍은 애님 소스에서 가져옴.
+    m_impl->animStart = animModel.m_impl->animStart;
+    m_impl->animDuration = animModel.m_impl->animDuration;
+    m_impl->time = 0.0;
+
+    Utility::Printf("[Set Animation] retarget bones matched %d/%d, dur=%.2fs\n",
+        matched, total, (float)m_impl->animDuration);
 }

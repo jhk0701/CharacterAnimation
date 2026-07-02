@@ -24,24 +24,16 @@ public:
     ModelData();
     ~ModelData();
 
-    // 스킨/애니메이션 포함 FBX 로드. 성공 시 true. (씬은 런타임 본 평가를 위해 보관.)
     bool Load(const std::wstring& filePath);
-
-    // 애니메이션 시간 진행(루프) + 이번 프레임 스킨드 정점 계산.
+    bool IsLoaded() const { return m_vertexCount > 0; }
     void Update(float deltaT);
 
-    bool IsLoaded() const { return m_vertexCount > 0; }
-
-    // 이번 프레임 CPU 스키닝된 전개 정점(비인덱스, 삼각형 리스트).
     const Vertex* SkinnedVertices() const;
     uint32_t VertexCount() const { return m_vertexCount; }
 
     const Math::BoundingSphere& GetBoundingSphere() const { return m_boundingSphere; }
-
-    // FBX SDK FbxManager 리소스 해제 (프로그램 종료 시 1회).
-    static void Shutdown();
-
-    struct Impl;   // 구현 세부(불투명). .cpp에서 정의.
+    void Shutdown();
+    struct Impl; 
 
     void SetAnim(const ModelData& animModel);
 

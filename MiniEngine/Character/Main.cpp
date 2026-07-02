@@ -55,9 +55,6 @@ private:
 
 CREATE_APPLICATION( Character )
 
-// 테스트용 배경
-static float s_ClearGray[4] = { 10.0f / 255.0f, 10.0f / 255.0f, 10.0f / 255.0f, 1.0f };
-
 void Character::Startup( void )
 {
     EngineCore::GetInstance()->Init();
@@ -70,18 +67,13 @@ void Character::Startup( void )
 
     m_Renderer.Initialize();
 
-    if (!m_Model.Load(L"Assets/Walking.fbx"))
+    // 기본 메시: X Bot(애니메이션 없음). 애님 소스: Walking. 이름 기반으로 리타게팅.
+    if (!m_Model.Load(L"Assets/X Bot.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/X Bot.fbx\n");
+    if (!m_Anim1.Load(L"Assets/Walking.fbx"))
         Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");
 
-    /*if (!m_Model.Load(L"Assets/X Bot.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/X Bot.fbx\n");*/
-    /*if (!m_Anim1.Load(L"Assets/Walking.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");*/
-    /*
-    if(!m_Anim2.Load(L"Assets/Capoeira.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/Capoeira.fbx\n");
-    */
-    // m_Model.SetAnim(m_Anim1);
+    m_Model.SetAnim(m_Anim1);
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(
@@ -100,7 +92,9 @@ void Character::Startup( void )
 
 void Character::Cleanup( void )
 {
-    ModelData::Shutdown();
+    m_Model.Shutdown();
+    m_Anim1.Shutdown();
+    m_Anim2.Shutdown();
 
     EngineCore::GetInstance()->Clear();
     GUIManager::GetInstance()->Clear();
@@ -117,7 +111,6 @@ void Character::Update( float deltaT )
 
     m_CameraController->Update(deltaT);
 
-    // TAA 미사용 -> 지터 없이 전체 화면 뷰포트.
     m_MainViewport.TopLeftX = 0.0f;
     m_MainViewport.TopLeftY = 0.0f;
     m_MainViewport.Width = (float)g_SceneColorBuffer.GetWidth();
@@ -138,7 +131,7 @@ void Character::RenderScene( void )
     gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
     gfxContext.ClearDepth(g_SceneDepthBuffer);
     gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-    gfxContext.ClearColor(g_SceneColorBuffer, s_ClearGray);   // 회색 배경
+    gfxContext.ClearColor(g_SceneColorBuffer);
 
     gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV());
     gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
