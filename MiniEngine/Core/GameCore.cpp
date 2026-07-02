@@ -94,10 +94,7 @@ namespace GameCore
 
 
     HWND g_hWnd = nullptr;
-    
     HWND* IGameApp::GetHwnd() const { return &g_hWnd; }
-    ID3D12Device* IGameApp::GetDx12Device() const { return Graphics::g_Device; }
-    ID3D12CommandQueue* IGameApp::GetDx12CommandQueue() const { return Graphics::g_CommandManager.GetCommandQueue(); }
 
     LRESULT CALLBACK WndProc( HWND, UINT, WPARAM, LPARAM );
 

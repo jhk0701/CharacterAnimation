@@ -62,8 +62,8 @@ void Character::Startup( void )
 
     m_FbxRenderer.Initialize();
 
-    if (!m_FbxModel.Load(L"Assets/Capoeira.fbx"))
-        Utility::Printf("[Character] Failed to load Assets/Capoeira.fbx\n");
+    if (!m_FbxModel.Load(L"Assets/Walking.fbx"))
+        Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(
@@ -72,7 +72,8 @@ void Character::Startup( void )
                               : Math::BoundingSphere(Math::Vector3(Math::kZero), 5.0f),
         Math::Vector3(Math::kYUnitVector)));
 
-    GUIManager::GetInstance()->Init(GetHwnd(), GetDx12Device(), GetDx12CommandQueue(),
+    
+    GUIManager::GetInstance()->Init(GetHwnd(), Graphics::g_Device, Graphics::g_CommandManager.GetCommandQueue(),
         g_SceneColorBuffer.GetWidth(), g_SceneColorBuffer.GetHeight());
 }
 
@@ -89,6 +90,7 @@ void Character::Update( float deltaT )
 {
     ScopedTimer _prof(L"Update State");
 
+    GUIManager::GetInstance()->UpdateGUI(); // 슬라이더 등 값을 GUI로 바꿀거라 먼저 호출
     EngineCore::GetInstance()->Update(deltaT);
 
     m_FbxModel.Update(deltaT);   // 애니메이션 진행 + CPU 스키닝
@@ -123,6 +125,8 @@ void Character::RenderScene( void )
     gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
     m_FbxRenderer.Render(gfxContext, m_Camera, m_FbxModel);
+
+    GUIManager::GetInstance()->RenderGUI(gfxContext.GetGraphicsContext().GetCommandList());
 
     gfxContext.Finish();
 }

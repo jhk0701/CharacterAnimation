@@ -43,8 +43,6 @@ namespace GameCore
 
         // 사용 편의용 핸들 getter
         HWND* GetHwnd() const;
-        ID3D12Device* GetDx12Device() const;
-        ID3D12CommandQueue* GetDx12CommandQueue() const;
     };
 }
 

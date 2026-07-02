@@ -11,9 +11,7 @@ class GUIManager
 public:
 	bool Init(HWND* pHwnd, ID3D12Device* pDevice, ID3D12CommandQueue* pCommandQueue, float w, float h);
 	void Clear();
+
 	void UpdateGUI();
-
-private:
-	bool bIsInitialized{ false };
-
+	void RenderGUI(ID3D12GraphicsCommandList* pCommandList);
 };

@@ -37,4 +37,23 @@ void GUIManager::Clear()
 
 void GUIManager::UpdateGUI()
 {
+	ImGui_ImplDX12_NewFrame(); // GUI 프레임 시작
+	ImGui_ImplWin32_NewFrame();
+
+	// 테스트
+	ImGui::NewFrame();
+
+	ImGui::Begin("Test GUI");
+	ImGui::Text("Hello World");
+
+	ImGui::ShowDemoWindow();
+
+	ImGui::End();
+	ImGui::Render();
+}
+
+void GUIManager::RenderGUI(ID3D12GraphicsCommandList* pCommandList)
+{
+	pCommandList->SetDescriptorHeaps(1, );
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCommandList);
 }

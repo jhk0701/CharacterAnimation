@@ -64,7 +64,7 @@ void FbxRenderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, c
     XMStoreFloat3(&cb.SunDirection,
         XMVector3Normalize(XMVectorSet(0.3f, -0.7f, -1.0f, 0.0f)));
     cb.pad0 = 0.0f;
-    cb.BaseColor = XMFLOAT3(1.0f, 1.0f, 1.0f);   // 흰색 diffuse
+    cb.BaseColor = XMFLOAT3(0.7f, 0.7f, 0.7f);   // 흰색 diffuse
     cb.pad1 = 0.0f;
 
     ctx.SetRootSignature(m_RootSig);
