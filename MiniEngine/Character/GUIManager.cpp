@@ -70,6 +70,8 @@ void GUIManager::UpdateGUI()
 
 void GUIManager::RenderGUI(GraphicsContext& gfxContext)
 {
+	// Graphics::s_
+
  	ID3D12GraphicsCommandList* pCmdList = gfxContext.GetGraphicsContext().GetCommandList();
 	pCmdList->SetDescriptorHeaps(1, &m_pGuiDesc);
 

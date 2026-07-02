@@ -1,12 +1,13 @@
 #include "pch.h"
-#include "FbxModel.h"
+#include "ModelData.h"
 
 #include "Utility.h"
 
 #include <vector>
+#include <stack>
 #include <float.h>
 #include <math.h>
-#include <fbxsdk.h>
+#include <fbxsdk.h> // TOOD : FBX 모델에 국한된 사용 -> Assimp로 바꿀 것
 
 using namespace DirectX;
 
@@ -67,27 +68,27 @@ struct MeshSkin
     std::vector<XMFLOAT3>   skinnedNrm;               // CP별 스킨 노멀(정규화)
 };
 
-struct FbxModel::Impl
+struct ModelData::Impl
 {
     FbxScene* scene = nullptr;      // 보관(런타임 본 평가용, 소유는 FbxManager)
     FbxTime   animStart;
     double    animDuration = 0.0;
     double    time = 0.0;
 
-    std::vector<MeshSkin>         meshes;
-    std::vector<FbxModel::Vertex> skinned;   // 전역 전개 정점(출력)
+    std::vector<MeshSkin>           meshes;
+    std::vector<ModelData::Vertex>  skinned;   // 전역 전개 정점(출력)
 };
 
-FbxModel::FbxModel() : m_impl(std::make_unique<Impl>()) {}
-FbxModel::~FbxModel() = default;
+ModelData::ModelData() : m_impl(std::make_unique<Impl>()) {}
+ModelData::~ModelData() = default;
 
-const FbxModel::Vertex* FbxModel::SkinnedVertices() const
+const ModelData::Vertex* ModelData::SkinnedVertices() const
 {
     return m_impl->skinned.empty() ? nullptr : m_impl->skinned.data();
 }
 
 // 지정 시각의 스킨드 정점 계산(월드 -> Z 반전으로 LH 변환).
-static void SkinAtTime(FbxModel::Impl& impl, double timeSec)
+static void SkinAtTime(ModelData::Impl& impl, double timeSec)
 {
     FbxTime ft;
     ft.SetSecondDouble(impl.animStart.GetSecondDouble() + timeSec);
@@ -127,7 +128,7 @@ static void SkinAtTime(FbxModel::Impl& impl, double timeSec)
         for (uint32_t i = 0; i < pvCount; ++i)
         {
             const int cp = ms.pvCP[i];
-            FbxModel::Vertex& out = impl.skinned[ms.pvBase + i];
+            ModelData::Vertex& out = impl.skinned[ms.pvBase + i];
             const XMFLOAT3& p = ms.skinnedPos[cp];
             const XMFLOAT3& n = ms.skinnedNrm[cp];
             out.pos = XMFLOAT3(p.x, p.y, -p.z);      // RH Y-up -> LH Y-up
@@ -136,7 +137,7 @@ static void SkinAtTime(FbxModel::Impl& impl, double timeSec)
     }
 }
 
-bool FbxModel::Load(const std::wstring& filePath)
+bool ModelData::Load(const std::wstring& filePath)
 {
     FbxManager* manager = GetFbxManager();
 
@@ -145,7 +146,7 @@ bool FbxModel::Load(const std::wstring& filePath)
 
     if (!importer->Initialize(pathUtf8.c_str(), -1, manager->GetIOSettings()))
     {
-        Utility::Printf("[FbxModel] Failed to init importer: %s\nErr: %s\n",
+        Utility::Printf("[Mesh] Failed to init importer: %s\nErr: %s\n",
             pathUtf8.c_str(), importer->GetStatus().GetErrorString());
         importer->Destroy();
         return false;
@@ -154,7 +155,7 @@ bool FbxModel::Load(const std::wstring& filePath)
     FbxScene* scene = FbxScene::Create(manager, "Scene");
     if (!importer->Import(scene))
     {
-        Utility::Printf("[FbxModel] Failed to import scene: %s\n",
+        Utility::Printf("[Mesh] Failed to import scene: %s\n",
             importer->GetStatus().GetErrorString());
         importer->Destroy();
         scene->Destroy();
@@ -173,8 +174,12 @@ bool FbxModel::Load(const std::wstring& filePath)
     uint32_t totalPV = 0;
     std::vector<FbxNode*> stack;
     if (FbxNode* root = scene->GetRootNode())
+    {
+        stack.reserve(root->GetChildCount());
+
         for (int i = 0; i < root->GetChildCount(); ++i)
             stack.push_back(root->GetChild(i));
+    }
 
     while (!stack.empty())
     {
@@ -188,7 +193,7 @@ bool FbxModel::Load(const std::wstring& filePath)
             continue;
         if (mesh->GetDeformerCount(FbxDeformer::eSkin) == 0)
         {
-            Utility::Printf("[FbxModel] skip non-skinned mesh: %s\n", node->GetName());
+            Utility::Printf("[Mesh] skip non-skinned mesh: %s\n", node->GetName());
             continue;
         }
         if (mesh->GetElementNormalCount() == 0)
@@ -286,7 +291,7 @@ bool FbxModel::Load(const std::wstring& filePath)
 
     if (totalPV == 0)
     {
-        Utility::Printf("[FbxModel] No skinned geometry in %ws\n", filePath.c_str());
+        Utility::Printf("[Mesh] No skinned geometry in %ws\n", filePath.c_str());
         return false;
     }
 
@@ -310,7 +315,13 @@ bool FbxModel::Load(const std::wstring& filePath)
                         || bn->LclScaling.GetCurve(layer)))
                         ++curved;
             }
-            if (curved > 0) { chosen = st; chosenSpan = st->GetLocalTimeSpan(); break; }
+
+            if (curved > 0) 
+            { 
+                chosen = st; 
+                chosenSpan = st->GetLocalTimeSpan();
+                break; 
+            }
         }
         if (!chosen && stackCount > 0)   // 폴백
         {
@@ -323,7 +334,7 @@ bool FbxModel::Load(const std::wstring& filePath)
             scene->GetAnimationEvaluator()->Reset();
             m_impl->animStart = chosenSpan.GetStart();
             m_impl->animDuration = (chosenSpan.GetStop() - chosenSpan.GetStart()).GetSecondDouble();
-            Utility::Printf("[FbxModel] anim stack '%s' dur=%.2fs\n",
+            Utility::Printf("[Mesh] anim stack '%s' dur=%.2fs\n",
                 chosen->GetName(), (float)m_impl->animDuration);
         }
     }
@@ -347,13 +358,13 @@ bool FbxModel::Load(const std::wstring& filePath)
     XMFLOAT3 c; XMStoreFloat3(&c, vc);
     m_boundingSphere = Math::BoundingSphere(Math::Vector3(c.x, c.y, c.z), Math::Scalar(radius));
 
-    Utility::Printf("[FbxModel] Loaded %ws : %u verts, %u meshes\n",
+    Utility::Printf("[Mesh] Loaded %ws : %u verts, %u meshes\n",
         filePath.c_str(), m_vertexCount, (uint32_t)m_impl->meshes.size());
 
     return true;
 }
 
-void FbxModel::Update(float deltaT)
+void ModelData::Update(float deltaT)
 {
     if (m_vertexCount == 0)
         return;
@@ -366,7 +377,7 @@ void FbxModel::Update(float deltaT)
     SkinAtTime(*m_impl, m_impl->time);
 }
 
-void FbxModel::Shutdown()
+void ModelData::Shutdown()
 {
     if (g_FbxManager)
     {

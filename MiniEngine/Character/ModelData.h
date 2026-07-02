@@ -11,7 +11,7 @@
 
 #include "Math/BoundingSphere.h"
 
-class FbxModel
+class ModelData
 {
 public:
     struct Vertex
@@ -20,8 +20,8 @@ public:
         DirectX::XMFLOAT3 normal;
     };
 
-    FbxModel();
-    ~FbxModel();
+    ModelData();
+    ~ModelData();
 
     // 스킨/애니메이션 포함 FBX 로드. 성공 시 true. (씬은 런타임 본 평가를 위해 보관.)
     bool Load(const std::wstring& filePath);
@@ -41,6 +41,8 @@ public:
     static void Shutdown();
 
     struct Impl;   // 구현 세부(불투명). .cpp에서 정의.
+
+    // 애니메이션 추가
 
 private:
     std::unique_ptr<Impl> m_impl;

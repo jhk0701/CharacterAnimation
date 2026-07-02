@@ -7,19 +7,19 @@
 #include "PipelineState.h"
 
 class GraphicsContext;
-class FbxModel;
+class ModelData;
 namespace Math { class BaseCamera; }
 
-class FbxRenderer
+class Renderer
 {
 public:
     // 루트 시그니처 + PSO 생성. Graphics 초기화 이후 1회 호출.
     void Initialize();
 
     // 대상 모델을 카메라 기준으로 렌더. 렌더 타겟/뷰포트는 호출부에서 설정.
-    void Render(GraphicsContext& ctx, const Math::BaseCamera& camera, const FbxModel& model);
+    void Render(GraphicsContext& ctx, const Math::BaseCamera& camera, const ModelData& mesh);
 
 private:
     RootSignature m_RootSig;
-    GraphicsPSO m_PSO{ L"FBX PSO" };
+    GraphicsPSO m_PSO{ L"Mesh PSO" };
 };

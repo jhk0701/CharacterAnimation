@@ -76,8 +76,8 @@
     <ClInclude Include="constVar.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="EngineCore.h" />
-    <ClInclude Include="FbxModel.h" />
-    <ClInclude Include="FbxRenderer.h" />
+    <ClInclude Include="ModelData.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="GUIManager.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="pch.h" />
@@ -98,8 +98,8 @@
     <ClCompile Include="constVar.cpp" />
     <ClCompile Include="define.cpp" />
     <ClCompile Include="EngineCore.cpp" />
-    <ClCompile Include="FbxModel.cpp" />
-    <ClCompile Include="FbxRenderer.cpp" />
+    <ClCompile Include="ModelData.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="GUIManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object.cpp" />

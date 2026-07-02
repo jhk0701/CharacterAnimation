@@ -36,7 +36,7 @@
     <Filter Include="Source Files\Engine\Scene">
       <UniqueIdentifier>{b33d2264-24e3-4cc5-b73b-aa2d6e0085a9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Engine\FBX">
+    <Filter Include="Source Files\Engine\Model">
       <UniqueIdentifier>{ccce10cb-702e-4a9c-b977-4b256c1ecd70}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -69,11 +69,11 @@
     <ClCompile Include="Component.cpp">
       <Filter>Source Files\Engine\Object\Component</Filter>
     </ClCompile>
-    <ClCompile Include="FbxModel.cpp">
-      <Filter>Source Files\Engine\FBX</Filter>
+    <ClCompile Include="ModelData.cpp">
+      <Filter>Source Files\Engine\Model</Filter>
     </ClCompile>
-    <ClCompile Include="FbxRenderer.cpp">
-      <Filter>Source Files\Engine\FBX</Filter>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\Engine\Model</Filter>
     </ClCompile>
     <ClCompile Include="GUIManager.cpp">
       <Filter>Source Files\Engine\Manager</Filter>
@@ -105,11 +105,11 @@
     <ClInclude Include="Component.h">
       <Filter>Source Files\Engine\Object\Component</Filter>
     </ClInclude>
-    <ClInclude Include="FbxModel.h">
-      <Filter>Source Files\Engine\FBX</Filter>
+    <ClInclude Include="ModelData.h">
+      <Filter>Source Files\Engine\Model</Filter>
     </ClInclude>
-    <ClInclude Include="FbxRenderer.h">
-      <Filter>Source Files\Engine\FBX</Filter>
+    <ClInclude Include="Renderer.h">
+      <Filter>Source Files\Engine\Model</Filter>
     </ClInclude>
     <ClInclude Include="GUIManager.h">
       <Filter>Source Files\Engine\Manager</Filter>

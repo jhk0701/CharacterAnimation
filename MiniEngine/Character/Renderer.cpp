@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "FbxRenderer.h"
-#include "FbxModel.h"
+#include "Renderer.h"
+#include "ModelData.h"
 
 #include "CommandContext.h"
 #include "GraphicsCommon.h"
@@ -26,11 +26,11 @@ namespace
     };
 }
 
-void FbxRenderer::Initialize()
+void Renderer::Initialize()
 {
     m_RootSig.Reset(1, 0);
     m_RootSig[0].InitAsConstantBuffer(0); // b0
-    m_RootSig.Finalize(L"FBX RootSig",
+    m_RootSig.Finalize(L"Mesh RootSig",
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] =
@@ -53,9 +53,9 @@ void FbxRenderer::Initialize()
     m_PSO.Finalize();
 }
 
-void FbxRenderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, const FbxModel& model)
+void Renderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, const ModelData& mesh)
 {
-    if (!model.IsLoaded())
+    if (!mesh.IsLoaded())
         return;
 
     SimpleConstants cb;
@@ -72,6 +72,6 @@ void FbxRenderer::Render(GraphicsContext& ctx, const Math::BaseCamera& camera, c
     ctx.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     ctx.SetDynamicConstantBufferView(0, sizeof(cb), &cb);
     // 매 프레임 CPU 스키닝된 전개 정점을 동적 VB로 업로드(비인덱스 드로우).
-    ctx.SetDynamicVB(0, model.VertexCount(), sizeof(FbxModel::Vertex), model.SkinnedVertices());
-    ctx.DrawInstanced(model.VertexCount(), 1, 0, 0);
+    ctx.SetDynamicVB(0, mesh.VertexCount(), sizeof(ModelData::Vertex), mesh.SkinnedVertices());
+    ctx.DrawInstanced(mesh.VertexCount(), 1, 0, 0);
 }

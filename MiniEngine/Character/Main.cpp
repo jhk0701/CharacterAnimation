@@ -17,8 +17,8 @@
 #include "GUIManager.h"
 
 // Character 자체 FBX 직접 렌더 경로 (Model/Renderer 파이프라인 미사용)
-#include "FbxModel.h"
-#include "FbxRenderer.h"
+#include "ModelData.h"
+#include "Renderer.h"
 
 using namespace GameCore;
 using namespace Graphics;
@@ -35,6 +35,8 @@ public:
     virtual void Update( float deltaT ) override;
     virtual void RenderScene( void ) override;
 
+    virtual void RenderUI(GraphicsContext& context) override;
+
 private:
     Camera m_Camera;
     std::unique_ptr<CameraController> m_CameraController;
@@ -42,8 +44,8 @@ private:
     D3D12_VIEWPORT m_MainViewport;
     D3D12_RECT     m_MainScissor;
 
-    FbxModel    m_FbxModel;
-    FbxRenderer m_FbxRenderer;
+    ModelData   m_Model;
+    Renderer    m_Renderer;
 };
 
 CREATE_APPLICATION( Character )
@@ -61,18 +63,18 @@ void Character::Startup( void )
     PostEffects::EnableAdaptation = true;
     TemporalEffects::EnableTAA = false;
 
-    m_FbxRenderer.Initialize();
+    m_Renderer.Initialize();
 
-    if (!m_FbxModel.Load(L"Assets/Walking.fbx"))
+    if (!m_Model.Load(L"Assets/Walking.fbx"))
         Utility::Printf("[Character] Failed to load Assets/Walking.fbx\n");
 
     m_Camera.SetZRange(1.0f, 10000.0f);
     m_CameraController.reset(new OrbitCamera(
         m_Camera,
-        m_FbxModel.IsLoaded() ? m_FbxModel.GetBoundingSphere()
+        m_Model.IsLoaded() ? m_Model.GetBoundingSphere()
                               : Math::BoundingSphere(Math::Vector3(Math::kZero), 5.0f),
         Math::Vector3(Math::kYUnitVector)));
-    
+
     GUIManager::GetInstance()->Init(
         &g_hWnd, 
         g_Device, 
@@ -83,7 +85,7 @@ void Character::Startup( void )
 
 void Character::Cleanup( void )
 {
-    FbxModel::Shutdown();
+    ModelData::Shutdown();
 
     EngineCore::GetInstance()->Clear();
     GUIManager::GetInstance()->Clear();
@@ -96,7 +98,7 @@ void Character::Update( float deltaT )
     GUIManager::GetInstance()->UpdateGUI(); // 슬라이더 등 값을 GUI로 바꿀거라 먼저 호출
     EngineCore::GetInstance()->Update(deltaT);
 
-    m_FbxModel.Update(deltaT);   // 애니메이션 진행 + CPU 스키닝
+    m_Model.Update(deltaT);   // 애니메이션 진행 + CPU 스키닝
 
     m_CameraController->Update(deltaT);
 
@@ -126,9 +128,14 @@ void Character::RenderScene( void )
     gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV());
     gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
-    m_FbxRenderer.Render(gfxContext, m_Camera, m_FbxModel); // 테스트용 fbx 렌더링
-
-    GUIManager::GetInstance()->RenderGUI(gfxContext);
+    m_Renderer.Render(gfxContext, m_Camera, m_Model); // 테스트용 fbx 렌더링
 
     gfxContext.Finish();
+}
+
+void Character::RenderUI(GraphicsContext& context)
+{
+    GameCore::IGameApp::RenderUI(context);
+
+    GUIManager::GetInstance()->RenderGUI(context);
 }
