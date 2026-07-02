@@ -641,53 +641,63 @@ CREATE_APPLICATION(MyApp)
 ## 12. Character 프로젝트 — 자체 FBX 직접 렌더 경로
 
 `MiniEngine/Character/`는 Model 프로젝트의 로딩/렌더 파이프라인(`Renderer::LoadModel`,
-`ModelData`, `.mini` 캐시, `MeshSorter`)을 사용하지 않고, **FBX SDK로 직접 파싱한 뒤 Core의
-그래픽스 래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. (2026-07-02 기준, `Assets/Capoeira.fbx`
-스켈레탈 메시를 로드해 **CPU 스키닝으로 스켈레톤 애니메이션을 재생**. 흰색 diffuse.)
+`.mini` 캐시, `MeshSorter`)을 사용하지 않고, **FBX SDK로 직접 파싱한 뒤 Core의 그래픽스
+래퍼만으로 직접 렌더링**하는 독립 경로를 갖는다. 클래스는 자체 정의한 `ModelData`(로더+CPU
+스키닝)와 `Renderer`(파이프라인+드로우)이며, Model 프로젝트의 동명 클래스와는 무관하다.
 
-### 애니메이션 / CPU 스키닝
+**현재 구성**: 베이스 스킨 메시 `Assets/X Bot.fbx`(애니메이션 없음)를 로드하고, 별도
+애님 소스 `Assets/Walking.fbx`를 로드한 뒤 **본 이름 매칭 리타게팅**(`ModelData::SetAnim`)으로
+베이스 메시에 클립을 입혀 **CPU 스키닝으로 재생**한다. 흰색 diffuse. `Main.cpp`는 애님 슬롯을
+여러 개(`m_Anim1`, `m_Anim2`) 두어 클립 교체를 지원하는 구조다.
 
-- `Capoeira.fbx`(Mixamo "with skin")는 메시+스켈레톤+스킨+애니메이션을 모두 포함해 단일 파일로 로드.
-- `FbxModel::Load`: 스킨 클러스터에서 본/가중치/바인드행렬 추출. **본에 애니메이션 커브가 연결된
-  스택**을 선택(빈 `Take 001` 스택 회피, 실제 `mixamo.com` 사용). FbxScene을 보관해 런타임에
+### 오브젝트 렌더링 절차 (5단계)
+
+`GameCore`가 매 프레임 `Update()` → `RenderScene()` → `RenderUI()`를 콜백한다.
+
+**① 초기화 (`Character::Startup`)**
+1. `m_Renderer.Initialize()` — RootSignature(b0 CBV) + PSO 생성(아래 참조).
+2. `m_Model.Load("Assets/X Bot.fbx")` — 베이스 스킨 메시 파싱.
+3. `m_Anim1.Load("Assets/Walking.fbx")` — 애님 소스 파싱.
+4. `m_Model.SetAnim(m_Anim1)` — 본 이름 매칭 리타게팅으로 클립 바인딩.
+5. `OrbitCamera` — 타깃을 모델 바운딩 스피어로 자동 프레이밍.
+
+**② 갱신 (`Character::Update`)**
+- `m_Model.Update(deltaT)` — 애님 시간 진행(구간 루프) + **CPU 선형 블렌드 스키닝(LBS)** 으로
+  이번 프레임 정점 재계산. Viewport/Scissor를 백버퍼 크기로 설정.
+
+**③ 씬 렌더 (`Character::RenderScene`)**
+- `GraphicsContext::Begin` → Depth `DEPTH_WRITE` 전이 + `ClearDepth` → Color `RENDER_TARGET`
+  전이 + `ClearColor`(회색 RGB 100,100,100) → `SetRenderTarget(RTV, DSV)` +
+  `SetViewportAndScissor` → `m_Renderer.Render(ctx, m_Camera, m_Model)` → `Finish`.
+
+**④ 드로우 (`Renderer::Render`)**
+- `SimpleConstants`(ViewProj/SunDirection/BaseColor) 채움 → `SetRootSignature`/`SetPipelineState`
+  → `SetDynamicConstantBufferView(0, cb)` → `SetDynamicVB(스킨드 정점)` → `DrawInstanced`(비인덱스).
+- CPU 스키닝된 전개 정점을 **매 프레임 동적 VB로 업로드**하는 방식(정적 VB/인덱스 버퍼 미사용).
+
+**⑤ 후처리/출력** — 프레임워크 루프가 이후 `PostEffects::Render`(톤매핑 등) → `Present` 수행.
+
+### 애니메이션 / CPU 스키닝 / 리타게팅
+
+- `ModelData::Load`: 스킨 클러스터에서 본/가중치/바인드행렬 추출. **본에 애니메이션 커브가
+  연결된 스택**을 선택(빈 스택 회피). FbxScene을 보관해 런타임에
   `node->EvaluateGlobalTransform(t)`로 본 글로벌을 평가.
 - **곱 순서 모호성 회피**: 검증된 `TransformPoint`(v*M 행벡터) 중첩으로 컨트롤포인트별 **본-로컬
-  바인드 위치/노멀**(`cp·M·L^-1`)을 로드 시 미리 계산. 런타임 `FbxModel::Update`는
-  `Σ w·TransformPoint(G_b(t), localPos)`(LBS)만 수행 후 Z 반전.
-- `FbxRenderer::Render`: 매 프레임 `GraphicsContext::SetDynamicVB`로 스킨드 정점 업로드 +
-  `DrawInstanced`(비인덱스). 정점 포맷(pos+normal)/셰이더/RootSignature는 정적 렌더와 동일.
-- `Main.cpp::Update`가 `m_FbxModel.Update(deltaT)`로 애니메이션을 진행(구간 루프).
+  바인드 위치/노멀**(`cp·M·L^-1`)을 로드 시 미리 계산. 런타임 `ModelData::Update`는
+  `Σ w·TransformPoint(G_b(t), localPos)`(LBS)만 수행 후 Z 반전(RH Y-up → LH Y-up).
+- **리타게팅(`ModelData::SetAnim(animModel)`)**: 애님 소스 씬의 노드를 이름→노드 맵으로 만들어
+  베이스 메시의 각 본을 이름으로 매칭(`animBones`)하고, 재생 타이밍(start/duration)을 애님
+  소스에서 가져온다. 스킨 시 매칭된 소스 본(`animBones[b]`)을 평가하며, 미매칭 본은 자체 본으로
+  폴백한다. **동일 바인드 포즈**(예: Mixamo 리그)를 가정한다.
 
 ### 구성 파일
 
 | 파일 | 역할 |
 |------|------|
-| `FbxModel.{h,cpp}` | FBX SDK 파싱 → 스킨/스켈레톤/애니 추출, 본-로컬 바인드 미리 계산. `Update(dt)`로 매 프레임 CPU LBS 스키닝(pimpl, 씬 보관) |
-| `FbxRenderer.{h,cpp}` | `RootSignature`(b0 CBV) + `GraphicsPSO` 생성, `Render()`에서 상수 세팅 후 `SetDynamicVB` + `DrawInstanced` |
+| `ModelData.{h,cpp}` | FBX SDK 파싱 → 스킨/스켈레톤/애니 추출, 본-로컬 바인드 미리 계산. `Update(dt)`로 매 프레임 CPU LBS 스키닝. `SetAnim`으로 이름 매칭 리타게팅(pimpl, 씬 보관) |
+| `Renderer.{h,cpp}` | `RootSignature`(b0 CBV) + `GraphicsPSO` 생성, `Render()`에서 상수 세팅 후 `SetDynamicVB` + `DrawInstanced` |
 | `Shaders/SimpleVS.hlsl`, `SimplePS.hlsl` | 최소 정점/픽셀 셰이더(ViewProj 변환 + N·L 조명). FxCompile로 `CompiledShaders/*.h` 자동 생성 |
-| `Main.cpp` | `IGameApp` 구현. `FbxModel`/`FbxRenderer`로 로드·애니 업데이트·렌더, 회색 배경 |
-
-### 렌더 흐름
-
-```
-Character::Startup()
-  ├─ FbxRenderer::Initialize()   ← RootSignature + PSO 생성
-  ├─ FbxModel::Load("Assets/Capoeira.fbx")
-  │    FbxImporter → Import → SystemUnit::m(단위만) / Triangulate
-  │    → 스킨 클러스터에서 본/가중치/바인드행렬 추출, 애니 커브 있는 스택 선택
-  │    → 컨트롤포인트별 본-로컬 바인드 위치/노멀 미리 계산(씬 보관)
-  └─ OrbitCamera 타깃 = 모델 바운딩 스피어
-
-Character::Update(dt)
-  └─ FbxModel::Update(dt)   ← 시간 진행(루프) + CPU LBS로 이번 프레임 정점 계산
-
-Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render → Present 수행)
-  ├─ ClearDepth(g_SceneDepthBuffer)
-  ├─ ClearColor(g_SceneColorBuffer, 회색 RGB 100,100,100)
-  ├─ SetRenderTarget(SceneColor RTV, SceneDepth DSV)
-  └─ FbxRenderer::Render(ctx, camera, model)
-       SetRootSignature/PSO → SetDynamicConstantBufferView(b0) → SetDynamicVB(스킨드 정점) → DrawInstanced
-```
+| `Main.cpp` | `IGameApp` 구현. `ModelData`/`Renderer`로 로드·리타게팅·애니 업데이트·렌더, 회색 배경 |
 
 ### Root Signature / 상수
 
@@ -695,7 +705,7 @@ Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render
 |------|------|
 | b0 (CBV) | `float4x4 ViewProj; float3 SunDirection; float pad0; float3 BaseColor; float pad1;` |
 
-- `BaseColor`는 diffuse. 현재 흰색(1,1,1) 고정으로 선명한 렌더. PS 조명은 `BaseColor*(0.55+0.45*NdL)`.
+- `BaseColor`는 diffuse. 현재 `(0.7,0.7,0.7)`로 세팅. PS 조명은 `BaseColor*(0.55+0.45*NdL)`.
 - 정점 포맷: `POSITION`(R32G32B32_FLOAT) + `NORMAL`(R32G32B32_FLOAT), stride 24.
 - 셰이더는 오프라인 FxCompile(`Build.props` 전역 규칙, 변수명 `g_p<파일명>`).
 - 렌더 상태: `RasterizerTwoSided`(Z 반전에 따른 와인딩 반전 대응), `BlendDisable`,
@@ -704,8 +714,11 @@ Character::RenderScene()   (프레임워크 루프가 이후 PostEffects::Render
 ### 주의점
 
 - **축 처리**: `FbxAxisSystem::DirectX.ConvertScene`는 파일에 따라 Y축까지 뒤집는 문제가 있어
-  사용하지 않는다. 대신 단위만 미터로 변환(`FbxSystemUnit::m`)하고, 베이크 시 **Z만 반전**해
+  사용하지 않는다. 대신 단위만 미터로 변환(`FbxSystemUnit::m`)하고, 스킨 출력에서 **Z만 반전**해
   RH Y-up → LH Y-up(DirectX)으로 직접 변환한다. Z 반전으로 와인딩이 뒤집히므로 후면 컬링을
   켜면 메시가 사라진다 → `RasterizerTwoSided`로 회피.
 - TAA 미사용(`TemporalEffects::EnableTAA = false`) → `ResolveImage` 불필요, 지터 없는 뷰포트.
+- **Scene/Object/Actor 시스템 미연결**: `Scene`/`SceneManager`/`Object`/`Actor`/`Component`
+  뼈대가 존재하고 `EngineCore::Render → SceneManager::Render` 경로도 있으나, 현재
+  `Character::RenderScene`은 이를 호출하지 않고 `Renderer::Render`를 직접 부른다(향후 통합 대상).
 - Model 프로젝트 참조는 현재 링크만 유지(미사용). 자세한 작업 내역은 `docs/log.md` 참조.

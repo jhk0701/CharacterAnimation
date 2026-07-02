@@ -1,5 +1,33 @@
 # 작업 로그
 
+## 2026-07-02 — 문서 동기화: Character 렌더 경로(ModelData/Renderer) + 애니메이션 리타게팅
+
+### 배경
+`docs/ProjectStructure.md` 섹션 12가 실제 코드와 어긋나 있었다. 이후 커밋
+(`Rename: 클래스 네이밍 수정`, `Feat: 애니메이션 변경 기능`, 브랜치 `feat-MulipleAnim`)으로
+클래스명과 애니메이션 방식이 바뀌었으나 문서에 반영되지 않았다.
+
+### 코드 현황 (문서 반영 대상)
+- **리네임**: `FbxModel` → `ModelData`, `FbxRenderer` → `Renderer`
+  (파일: `ModelData.{h,cpp}`, `Renderer.{h,cpp}`).
+- **에셋/애니메이션 변경**: 단일 `Capoeira.fbx` → 베이스 스킨 메시 `X Bot.fbx`(애님 없음) +
+  애님 소스 `Walking.fbx`. `ModelData::SetAnim(animModel)`이 **본 이름 매칭 리타게팅**으로
+  베이스 메시에 클립을 입힌다(애님 씬 노드를 이름→노드 맵으로 매칭, 미매칭 본은 자체 본 폴백,
+  타이밍은 애님 소스에서 취득). 스킨 시 매칭 소스 본을 `EvaluateGlobalTransform`으로 평가.
+- **다중 애님 슬롯**: `Main.cpp`에 `m_Anim1`, `m_Anim2`를 두어 클립 교체를 지원하는 구조.
+- CPU LBS 스키닝(본-로컬 바인드 미리 계산 + Z 반전), 동적 VB 업로드 + `DrawInstanced`,
+  RootSig(b0)/셰이더/정점 포맷/TwoSided 렌더 상태는 유지.
+
+### 반영
+- `ProjectStructure.md` 섹션 12 전면 갱신: 클래스명/에셋 정정, **오브젝트 렌더링 절차 5단계**
+  (Startup → Update → RenderScene → Renderer::Render → 후처리) 추가, 리타게팅 소절 추가,
+  Scene/Object/Actor 시스템이 아직 렌더에 미연결이라는 점 명시.
+
+### 검증
+- 문서 변경(빌드 불필요). 섹션 12의 클래스명/에셋/절차가 `Main.cpp`, `Renderer.cpp`,
+  `ModelData.cpp` 실제 코드와 일치함을 대조 확인. 참조 파일 경로 존재 확인
+  (`ModelData.h/.cpp`, `Renderer.h/.cpp`, `Shaders/SimpleVS.hlsl`, `SimplePS.hlsl`).
+
 ## 2026-07-02 — Capoeira.fbx 스켈레톤 애니메이션 재생 (CPU 스키닝)
 
 ### 목표

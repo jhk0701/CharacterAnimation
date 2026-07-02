@@ -28,8 +28,7 @@ namespace
         return g_FbxManager;
     }
 
-    // FBX는 행 벡터(row-vector) 규약: TransformPoint(M,v) = v * M (점 변환, 이동 포함).
-    // 노드 글로벌 변환에 대해 검증됨(정적 렌더 경로).
+    // FBX는 행 벡터(row-vector): TransformPoint(M,v) = v * M (점 변환, 이동 포함).
     XMFLOAT3 TransformPoint(const FbxAMatrix& m, double x, double y, double z)
     {
         return XMFLOAT3(
@@ -52,22 +51,25 @@ namespace
     XMFLOAT3 TransformDirRaw(const FbxAMatrix& m, const XMFLOAT3& v) { return TransformDirRaw(m, v.x, v.y, v.z); }
 }
 
-// 정점 영향: bone<0 이면 정적(로컬값을 그대로 사용). localPos/localNrm은
-// 해당 본의 "바인드 로컬" 공간 값(=cp를 M·L^-1로 변환) -> 런타임에 G_b(t)만 곱한다.
-struct Influence { int bone; float weight; XMFLOAT3 localPos; XMFLOAT3 localNrm; };
+struct Influence 
+{ 
+    int bone; 
+    float weight; 
+    XMFLOAT3 localPos; 
+    XMFLOAT3 localNrm; 
+};
 
 struct MeshSkin
 {
-    std::vector<FbxNode*> bones;                      // 클러스터별 연결 본(자체 씬)
-    std::vector<FbxNode*> animBones;                  // 리타게트 소스 본(애님 씬, 이름 매칭). 없으면 nullptr
-    std::vector<std::vector<Influence>> cpInfluence;  // 컨트롤포인트별 영향
-    std::vector<int>      pvCP;                        // 폴리곤-정점 -> 컨트롤포인트
-    uint32_t              pvBase = 0;                  // 전역 스킨드 배열 시작 오프셋
-
-    // 프레임 스크래치
-    std::vector<FbxAMatrix> boneGlobal;               // 본별 G_b(t)
-    std::vector<XMFLOAT3>   skinnedPos;               // CP별 스킨 위치(월드, Z반전 전)
-    std::vector<XMFLOAT3>   skinnedNrm;               // CP별 스킨 노멀(정규화)
+    std::vector<FbxNode*> bones;                      
+    std::vector<FbxNode*> animBones;                  
+    std::vector<std::vector<Influence>> cpInfluence;
+    std::vector<int> pvCP; // 폴리곤-정점 -> 컨트롤포인트
+    uint32_t pvBase = 0; // 전역 스킨드 배열 시작 오프셋
+     
+    std::vector<FbxAMatrix> boneGlobal; // 본 트랜스폼
+    std::vector<XMFLOAT3> skinnedPos; // 스킨 버텍스 
+    std::vector<XMFLOAT3> skinnedNrm; // 스킨 노멀
 };
 
 struct ModelData::Impl
@@ -90,7 +92,6 @@ const ModelData::Vertex* ModelData::SkinnedVertices() const
     return m_impl->skinned.empty() ? nullptr : m_impl->skinned.data();
 }
 
-// 지정 시각의 스킨드 정점 계산(월드 -> Z 반전으로 LH 변환).
 static void SkinAtTime(ModelData::Impl& impl, double timeSec)
 {
     FbxTime ft;
@@ -102,8 +103,6 @@ static void SkinAtTime(ModelData::Impl& impl, double timeSec)
         ms.boneGlobal.resize(boneCount);
         for (int b = 0; b < boneCount; ++b)
         {
-            // 리타게트 소스가 있으면 애님 씬의 이름-매칭 본을 평가(동일 바인드 포즈 가정).
-            // 없으면 자체 본을 평가(회귀 없음).
             FbxNode* src = (b < (int)ms.animBones.size() && ms.animBones[b]) ? ms.animBones[b] : ms.bones[b];
             ms.boneGlobal[b] = src->EvaluateGlobalTransform(ft);
         }
@@ -115,7 +114,7 @@ static void SkinAtTime(ModelData::Impl& impl, double timeSec)
             for (const Influence& in : ms.cpInfluence[cp])
             {
                 XMFLOAT3 pp, nn;
-                if (in.bone < 0)   // 정적(영향 없음) - 로컬값이 곧 월드 바인드
+                if (in.bone < 0)
                 {
                     pp = in.localPos;
                     nn = in.localNrm;
@@ -145,7 +144,7 @@ static void SkinAtTime(ModelData::Impl& impl, double timeSec)
             ModelData::Vertex& out = impl.skinned[ms.pvBase + i];
             const XMFLOAT3& p = ms.skinnedPos[cp];
             const XMFLOAT3& n = ms.skinnedNrm[cp];
-            out.pos = XMFLOAT3(p.x, p.y, -p.z);      // RH Y-up -> LH Y-up
+            out.pos = XMFLOAT3(p.x, p.y, -p.z);
             out.normal = XMFLOAT3(n.x, n.y, -n.z);
         }
     }

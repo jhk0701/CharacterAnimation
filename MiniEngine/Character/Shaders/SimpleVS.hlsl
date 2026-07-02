@@ -1,12 +1,10 @@
-// Character 자체 FBX 렌더 경로용 최소 정점 셰이더.
-// Model 프로젝트 파이프라인과 무관하게 position+normal 정적 메시를 렌더한다.
 
 cbuffer Constants : register(b0)
 {
-    float4x4 ViewProj;      // world->clip (정점은 이미 월드 공간으로 베이크됨)
+    float4x4 ViewProj;
     float3   SunDirection;
     float    pad0;
-    float3   BaseColor;     // diffuse (흰색 = 선명한 렌더)
+    float3   BaseColor;
     float    pad1;
 };
 
