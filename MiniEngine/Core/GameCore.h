@@ -40,6 +40,11 @@ namespace GameCore
 
         // Optional UI (overlay) rendering pass.  This is LDR.  The buffer is already cleared.
         virtual void RenderUI( class GraphicsContext& ) {};
+
+        // 사용 편의용 핸들 getter
+        HWND* GetHwnd() const;
+        ID3D12Device* GetDx12Device() const;
+        ID3D12CommandQueue* GetDx12CommandQueue() const;
     };
 }
 

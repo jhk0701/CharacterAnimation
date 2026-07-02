@@ -291,7 +291,6 @@ bool FbxModel::Load(const std::wstring& filePath)
     }
 
     // 애니메이션 스택 선택: 본에 애니메이션 커브가 실제로 연결된 스택을 고른다.
-    // (Mixamo FBX는 빈 스택 'Take 001' + 실제 애니 스택 'mixamo.com'이 함께 있을 수 있음.)
     {
         const int stackCount = scene->GetSrcObjectCount<FbxAnimStack>();
         const std::vector<FbxNode*>& bones = m_impl->meshes[0].bones;

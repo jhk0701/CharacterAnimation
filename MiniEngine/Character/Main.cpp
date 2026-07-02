@@ -6,7 +6,6 @@
 #include "CommandContext.h"
 #include "BufferManager.h"
 
-// 후처리(톤매핑)는 프레임워크 메인 루프가 담당한다.
 #include "TemporalEffects.h"
 #include "PostEffects.h"
 
@@ -14,6 +13,7 @@
 #include "CameraController.h"
 
 #include "EngineCore.h"
+#include "GUIManager.h"
 
 // Character 자체 FBX 직접 렌더 경로 (Model/Renderer 파이프라인 미사용)
 #include "FbxModel.h"
@@ -47,13 +47,14 @@ private:
 
 CREATE_APPLICATION( Character )
 
-// 배경 클리어 색상: RGB(100,100,100) 회색 (0~255 -> 0~1 정규화)
-static float s_ClearGray[4] = { 100.0f / 255.0f, 100.0f / 255.0f, 100.0f / 255.0f, 1.0f };
+// 테스트용 배경
+static float s_ClearGray[4] = { 10.0f / 255.0f, 10.0f / 255.0f, 10.0f / 255.0f, 1.0f };
 
 void Character::Startup( void )
 {
     EngineCore::GetInstance()->Init();
 
+    // 테스트 세팅
     // 후처리 설정. TAA는 사용하지 않으므로 resolve 불필요.
     PostEffects::EnableHDR = true;
     PostEffects::EnableAdaptation = true;
@@ -70,12 +71,18 @@ void Character::Startup( void )
         m_FbxModel.IsLoaded() ? m_FbxModel.GetBoundingSphere()
                               : Math::BoundingSphere(Math::Vector3(Math::kZero), 5.0f),
         Math::Vector3(Math::kYUnitVector)));
+
+    GUIManager::GetInstance()->Init(GetHwnd(), GetDx12Device(), GetDx12CommandQueue(),
+        g_SceneColorBuffer.GetWidth(), g_SceneColorBuffer.GetHeight());
 }
 
 void Character::Cleanup( void )
 {
     EngineCore::GetInstance()->Clear();
+    
     FbxModel::Shutdown();
+
+    GUIManager::GetInstance()->Clear();
 }
 
 void Character::Update( float deltaT )
